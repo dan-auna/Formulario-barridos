@@ -338,6 +338,25 @@ function filtrarTabla() {
 /* ══════════════════════════════════════════════
    RENDER TABLE
 ══════════════════════════════════════════════ */
+function formatFecha(valor) {
+  if (!valor) return "—";
+  // Intenta parsear cualquier formato (ISO, string de texto, Date de Sheets, etc.)
+  const date = new Date(valor);
+  if (isNaN(date.getTime())) return valor; // Si no se puede parsear, muestra tal cual
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Lima",
+    day:    "2-digit",
+    month:  "2-digit",
+    year:   "numeric",
+    hour:   "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(date);
+  const get = (t) => parts.find(p => p.type === t)?.value ?? "";
+  const ampm = get("dayPeriod").toLowerCase();
+  return `${get("month")}/${get("day")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
+}
+
 function getBadgeClass(producto) {
   const map = {
     "Auna Classic":  "badge-classic",
@@ -382,7 +401,7 @@ function renderTable(datos, contenedor) {
     const badgeClass = getBadgeClass(d.producto);
     html += `
       <tr>
-        <td style="white-space:nowrap; color:var(--slate-500); font-size:0.8rem">${d.fecha || "—"}</td>
+        <td style="white-space:nowrap; color:var(--slate-500); font-size:0.8rem">${formatFecha(d.fecha)}</td>
         <td style="font-weight:600">${d.nombre || "—"}</td>
         <td>${d.telefono || "—"}</td>
         <td style="text-align:center">${d.edad || "—"}</td>

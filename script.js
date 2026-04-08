@@ -29,14 +29,21 @@ document.getElementById('barrido-form').addEventListener('submit', function(e) {
         comentarios: document.getElementById('comentarios').value
     };
 
-    // Esto envía los datos a Google Sheets
-    fetch(URL_GOOGLE_SCRIPT, {
-        method: 'POST',
-        mode: 'no-cors', // Importante para Google Scripts
-        cache: 'no-cache',
-        body: JSON.stringify(datos)
-    }).then(() => {
-        alert("¡Registro guardado con éxito en Google Sheets!");
-        document.getElementById('barrido-form').reset();
-    }).catch(err => alert("Error: " + err));
+   // Reemplaza tu bloque de "fetch" anterior por este:
+fetch(URL_GOOGLE_SCRIPT, {
+    method: 'POST',
+    mode: 'no-cors', 
+    headers: {
+        'Content-Type': 'text/plain' // Google prefiere text/plain para evitar bloqueos CORS
+    },
+    body: JSON.stringify(datos)
+})
+.then(() => {
+    alert("¡Registro enviado! Revisa tu Google Sheet en unos segundos.");
+    document.getElementById('barrido-form').reset();
+})
+.catch(err => {
+    console.error("Error detallado:", err);
+    alert("Hubo un error al conectar con la base de datos.");
+});
 });

@@ -1,4 +1,4 @@
-const URL_GOOGLE_SCRIPT = "TU_URL_AQUI"; 
+const URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA/exec"; 
 
 // FUNCIÓN DE LOGIN DINÁMICO
 async function login() {

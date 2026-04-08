@@ -96,6 +96,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Product select preview
   document.getElementById("producto").addEventListener("change", updateProductChip);
+
+  // ── Restricciones en inputs numéricos ──
+  // Teléfono: solo dígitos, máximo 9
+  ["telefono", "edit-telefono"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute("maxlength", "9");
+    el.setAttribute("inputmode", "numeric");
+    el.addEventListener("input", () => {
+      el.value = el.value.replace(/\D/g, "").slice(0, 9);
+    });
+    el.addEventListener("keydown", (e) => {
+      const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab","Home","End"];
+      if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+    });
+  });
+
+  // Edad: solo dígitos, máximo 3
+  ["edad", "edit-edad"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.setAttribute("maxlength", "3");
+    el.setAttribute("inputmode", "numeric");
+    el.addEventListener("input", () => {
+      el.value = el.value.replace(/\D/g, "").slice(0, 3);
+    });
+    el.addEventListener("keydown", (e) => {
+      const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","Tab","Home","End"];
+      if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+    });
+  });
 });
 
 /* ══════════════════════════════════════════════
@@ -167,8 +198,8 @@ function validateForm() {
 
   const fields = [
     { id: "nombre",    errId: "err-nombre",   msg: "Ingresa el nombre completo",   check: (v) => v.trim().length >= 3 },
-    { id: "telefono",  errId: "err-telefono", msg: "Ingresa un teléfono válido",   check: (v) => /^\d{7,15}$/.test(v.replace(/\s/g, "")) },
-    { id: "edad",      errId: "err-edad",     msg: "Ingresa una edad válida (1–120)", check: (v) => +v >= 1 && +v <= 120 },
+    { id: "telefono",  errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
+    { id: "edad",      errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
     { id: "producto",  errId: "err-producto", msg: "Selecciona un producto",       check: (v) => v !== "" },
   ];
 
@@ -227,8 +258,8 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
                    return `${get("month")}/${get("day")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
                  })(),
     nombre:      document.getElementById("nombre").value.trim(),
-    telefono:    document.getElementById("telefono").value.trim(),
-    edad:        document.getElementById("edad").value,
+    telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
+    edad:        parseInt(document.getElementById("edad").value, 10),
     producto:    document.getElementById("producto").value,
     comentarios: document.getElementById("comentarios").value.trim(),
   };
@@ -279,6 +310,24 @@ function showToast() {
 }
 
 /* ══════════════════════════════════════════════
+   NORMALIZAR CLAVES (elimina tildes de los headers)
+══════════════════════════════════════════════ */
+function normalizarClaves(obj) {
+  const resultado = {};
+  Object.keys(obj).forEach((key) => {
+    const keyNorm = key
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // elimina diacríticos (tildes)
+      .toLowerCase()
+      .trim();
+    resultado[keyNorm] = obj[key];
+  });
+  // Preservar _rowIndex sin modificar
+  if (obj._rowIndex !== undefined) resultado._rowIndex = obj._rowIndex;
+  return resultado;
+}
+
+/* ══════════════════════════════════════════════
    VER REGISTROS
 ══════════════════════════════════════════════ */
 async function verRegistros() {
@@ -301,8 +350,8 @@ async function verRegistros() {
     const todosLosLeads = await response.json();
 
     allLeads = rol === "Administrador"
-      ? todosLosLeads
-      : todosLosLeads.filter((l) => l.usuario === miUser);
+      ? todosLosLeads.map(normalizarClaves)
+      : todosLosLeads.filter((l) => l.usuario === miUser).map(normalizarClaves);
 
     document.getElementById("records-sub").textContent =
       `${allLeads.length} lead${allLeads.length !== 1 ? "s" : ""} encontrado${allLeads.length !== 1 ? "s" : ""}`;
@@ -393,21 +442,25 @@ function renderTable(datos, contenedor) {
           <th>Producto</th>
           ${mostrarAsesor ? "<th>Asesor</th>" : ""}
           <th>Comentarios</th>
+          <th style="width:40px"></th>
         </tr>
       </thead>
       <tbody>`;
 
-  datos.forEach((d) => {
+  datos.forEach((d, i) => {
     const badgeClass = getBadgeClass(d.producto);
+    // guardamos el índice global en allLeads para poder editar
+    const globalIdx = allLeads.indexOf(d);
     html += `
-      <tr>
+      <tr class="row-clickable" onclick="abrirEditModal(${globalIdx})" title="Clic para editar este lead">
         <td style="white-space:nowrap; color:var(--slate-500); font-size:0.8rem">${formatFecha(d.fecha)}</td>
-        <td style="font-weight:600">${d.nombre || "—"}</td>
-        <td>${d.telefono || "—"}</td>
-        <td style="text-align:center">${d.edad || "—"}</td>
+        <td style="font-weight:600">${d.nombre || d["nombre"] || "—"}</td>
+        <td>${String(d.telefono ?? d["teléfono"] ?? "").trim() || "—"}</td>
+        <td style="text-align:center">${d.edad ?? d["edad"] ?? "—"}</td>
         <td><span class="badge-product ${badgeClass}">${d.producto || "—"}</span></td>
         ${mostrarAsesor ? `<td style="color:var(--slate-500); font-size:0.82rem">${d.agente || d.usuario || "—"}</td>` : ""}
         <td style="color:var(--slate-500); font-size:0.82rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${d.comentarios || ""}">${d.comentarios || "—"}</td>
+        <td class="td-edit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></td>
       </tr>`;
   });
 
@@ -418,4 +471,148 @@ function renderTable(datos, contenedor) {
     <div class="table-footer">${datos.length} registro${datos.length !== 1 ? "s" : ""}</div>`;
 
   contenedor.innerHTML = html;
+}
+
+/* ══════════════════════════════════════════════
+   MODAL EDITAR LEAD
+══════════════════════════════════════════════ */
+function abrirEditModal(idx) {
+  const lead = allLeads[idx];
+  if (!lead) return;
+
+  // Guardar índice para usarlo al guardar
+  document.getElementById("edit-row-index").value = idx;
+
+  // Rellenar campos
+  document.getElementById("edit-nombre").value      = lead.nombre      || "";
+  document.getElementById("edit-telefono").value    = String(lead.telefono ?? lead["teléfono"] ?? "");
+  document.getElementById("edit-edad").value        = lead.edad        ?? "";
+  document.getElementById("edit-producto").value    = lead.producto    || "";
+  document.getElementById("edit-comentarios").value = lead.comentarios || "";
+
+  // Mostrar fecha (solo lectura en el subtítulo)
+  document.getElementById("modal-fecha-display").textContent =
+    `📅 Registrado el ${formatFecha(lead.fecha)}`;
+
+  // Limpiar errores previos
+  ["nombre","telefono","edad","producto"].forEach(f => {
+    document.getElementById(`edit-err-${f}`).textContent = "";
+    document.getElementById(`edit-${f}`).classList.remove("invalid");
+  });
+
+  // Mostrar modal
+  const overlay = document.getElementById("edit-modal-overlay");
+  overlay.style.display = "flex";
+  // Forzar reflow para que la animación dispare
+  overlay.offsetHeight;
+  overlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeEditModal(event) {
+  // Si se hizo clic en el overlay (fondo), cerrar; si fue dentro del card, no
+  if (event && event.target !== document.getElementById("edit-modal-overlay")) return;
+
+  const overlay = document.getElementById("edit-modal-overlay");
+  overlay.classList.remove("active");
+  setTimeout(() => {
+    overlay.style.display = "none";
+    document.body.style.overflow = "";
+  }, 250);
+}
+
+// Cerrar con Escape
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeEditModal();
+});
+
+function validateEditForm() {
+  let valid = true;
+  const fields = [
+    { id: "edit-nombre",   errId: "edit-err-nombre",   msg: "Ingresa el nombre completo",      check: (v) => v.trim().length >= 3 },
+    { id: "edit-telefono", errId: "edit-err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
+    { id: "edit-edad",     errId: "edit-err-edad",     msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
+    { id: "edit-producto", errId: "edit-err-producto", msg: "Selecciona un producto",          check: (v) => v !== "" },
+  ];
+  fields.forEach(({ id, errId, msg, check }) => {
+    const el  = document.getElementById(id);
+    const err = document.getElementById(errId);
+    if (!check(el.value)) {
+      el.classList.add("invalid");
+      err.textContent = msg;
+      valid = false;
+    } else {
+      el.classList.remove("invalid");
+      err.textContent = "";
+    }
+  });
+  return valid;
+}
+
+async function guardarEdicion() {
+  if (!validateEditForm()) return;
+
+  const idx  = parseInt(document.getElementById("edit-row-index").value, 10);
+  const lead = allLeads[idx];
+  if (!lead) return;
+
+  // Loading state
+  const btn    = document.getElementById("btn-save-edit");
+  const text   = btn.querySelector(".btn-text");
+  const loader = btn.querySelector(".btn-loader");
+  btn.disabled         = true;
+  text.style.display   = "none";
+  loader.style.display = "flex";
+
+  const datosEditados = {
+    action:      "updateLead",
+    rowIndex:    lead._rowIndex, // índice real de la fila en el sheet (ver nota abajo)
+    usuario:     lead.usuario,
+    agente:      lead.agente,
+    fecha:       lead.fecha,     // no se modifica
+    nombre:      document.getElementById("edit-nombre").value.trim(),
+    telefono:    parseInt(document.getElementById("edit-telefono").value.replace(/\s/g, ""), 10),
+    edad:        parseInt(document.getElementById("edit-edad").value, 10),
+    producto:    document.getElementById("edit-producto").value,
+    comentarios: document.getElementById("edit-comentarios").value.trim(),
+  };
+
+  try {
+    await fetch(URL_GOOGLE_SCRIPT, {
+      method: "POST",
+      mode:   "no-cors",
+      body:   JSON.stringify(datosEditados),
+    });
+
+    // Actualizar cache local para reflejar cambios sin recargar
+    allLeads[idx] = { ...lead, ...datosEditados };
+
+    // Cerrar modal y refrescar tabla
+    const overlay = document.getElementById("edit-modal-overlay");
+    overlay.classList.remove("active");
+    setTimeout(() => {
+      overlay.style.display = "none";
+      document.body.style.overflow = "";
+    }, 250);
+
+    renderTable(allLeads, document.getElementById("tabla-registros"));
+    showToastEdit();
+
+  } catch (error) {
+    alert("Error al guardar. Verifica tu conexión e intenta de nuevo.");
+  } finally {
+    btn.disabled         = false;
+    text.style.display   = "flex";
+    loader.style.display = "none";
+  }
+}
+
+function showToastEdit() {
+  const toast = document.getElementById("toast-edit");
+  toast.style.display = "flex";
+  setTimeout(() => {
+    toast.style.animation = "none";
+    toast.style.display   = "none";
+    toast.style.animation = "";
+  }, 3500);
 }

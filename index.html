@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Barrido</title>
+    <title>Sistema de Gestión - Auna</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="login-section" class="container">
-        <h2>Iniciar Sesión</h2>
-        <input type="text" id="username" placeholder="Usuario">
-        <input type="password" id="password" placeholder="Contraseña">
-        <button onclick="login()">Entrar</button>
+        <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg" alt="Logo Auna" class="logo">
+        <h2>Ingreso Asesores</h2>
+        <input type="text" id="username" placeholder="Tu usuario">
+        <input type="password" id="password" placeholder="Tu contraseña">
+        <button onclick="login()">Iniciar Sesión</button>
     </div>
 
-    <div id="form-section" class="container" style="display:none;">
-        <h2 id="form-title">Formulario Barrido</h2>
+    <div id="form-section" class="container" style="display:none; max-width: 600px;">
+        <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg" alt="Logo Auna" class="logo" style="width:120px;">
+        <h2 id="form-title">Formulario de Barrido</h2>
+        
         <form id="barrido-form">
-            <input type="text" id="nombre" placeholder="Nombre y Apellido" required>
-            <input type="tel" id="telefono" placeholder="Número de teléfono" required>
-            <input type="number" id="edad" placeholder="Edad" required>
+            <input type="text" id="nombre" placeholder="Nombre completo del cliente" required>
+            <div style="display: flex; gap: 10px;">
+                <input type="tel" id="telefono" placeholder="Teléfono" required>
+                <input type="number" id="edad" placeholder="Edad" required>
+            </div>
             
-            <select id="producto">
+            <select id="producto" required>
+                <option value="" disabled selected>Selecciona un producto</option>
                 <option value="Auna Classic">Auna Classic</option>
                 <option value="Auna Premium">Auna Premium</option>
                 <option value="Auna Senior">Auna Senior</option>
@@ -30,12 +36,12 @@
                 <option value="Onco Plus">Onco Plus</option>
             </select>
 
-            <textarea id="comentarios" placeholder="Comentarios"></textarea>
+            <textarea id="comentarios" rows="3" placeholder="Observaciones adicionales..."></textarea>
             
-            <button type="submit">Guardar Registro</button>
+            <button type="submit">Registrar Lead</button>
         </form>
-        <hr>
-        <button onclick="verRegistros()">Ver Mis Registros</button>
+
+        <button class="secondary-btn" onclick="verRegistros()">Consultar Mis Registros</button>
         <div id="tabla-registros"></div>
     </div>
 

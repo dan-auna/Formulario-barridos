@@ -200,7 +200,6 @@
       font-family: 'Outfit', sans-serif;
       font-size: 0.95rem;
       color: var(--slate-900);
-      font-weight: 500;
       background: var(--slate-50);
       border: 1.5px solid var(--slate-200);
       border-radius: var(--radius-sm);
@@ -208,16 +207,6 @@
       outline: none;
       transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
       -webkit-appearance: none;
-    }
-
-    input::placeholder {
-      color: var(--slate-300);
-      font-weight: 400;
-    }
-
-    input:not(:placeholder-shown) {
-      color: var(--slate-900);
-      font-weight: 500;
     }
 
     input:focus {
@@ -524,27 +513,6 @@
 
       <div class="form-divider"></div>
 
-      <!-- Plan de salud -->
-      <div class="field-group">
-        <label class="field-label">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          ¿Actualmente cuentas con algún plan de salud?
-        </label>
-        <div class="options-grid" id="opts-plan">
-          <button class="option-card" type="button" onclick="selectOpcion('plan', 'Sí', this)">
-            <span class="option-emoji">✅</span>
-            <div class="option-radio"><div class="option-radio-dot"></div></div>
-            <span class="option-text">Sí, cuento con uno</span>
-          </button>
-          <button class="option-card" type="button" onclick="selectOpcion('plan', 'No', this)">
-            <span class="option-emoji">❌</span>
-            <div class="option-radio"><div class="option-radio-dot"></div></div>
-            <span class="option-text">No, aún no tengo</span>
-          </button>
-        </div>
-        <span class="field-error" id="err-plan"></span>
-      </div>
-
       <!-- Seguro oncológico -->
       <div class="field-group">
         <label class="field-label">
@@ -552,12 +520,12 @@
           ¿Actualmente cuentas con algún seguro oncológico?
         </label>
         <div class="options-grid" id="opts-seguro">
-          <button class="option-card" type="button" onclick="selectOpcion('seguro', 'Sí', this)">
+          <button class="option-card" type="button" onclick="selectOpcion('Sí', this)">
             <span class="option-emoji">✅</span>
             <div class="option-radio"><div class="option-radio-dot"></div></div>
             <span class="option-text">Sí, cuento con uno</span>
           </button>
-          <button class="option-card" type="button" onclick="selectOpcion('seguro', 'No', this)">
+          <button class="option-card" type="button" onclick="selectOpcion('No', this)">
             <span class="option-emoji">❌</span>
             <div class="option-radio"><div class="option-radio-dot"></div></div>
             <span class="option-text">No, aún no tengo</span>
@@ -605,7 +573,6 @@
   const URL_GS = "https://script.google.com/macros/s/AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA/exec";
   const USUARIO = decodeURIComponent(new URLSearchParams(window.location.search).get("u") || "encuesta");
 
-  let planSeleccionado   = null;
   let seguroSeleccionado = null;
 
   // Solo dígitos
@@ -628,14 +595,12 @@
     });
   });
 
-  // Seleccionar opción
-  function selectOpcion(campo, valor, btn) {
-    const grupoId = campo === "plan" ? "opts-plan" : "opts-seguro";
-    document.querySelectorAll("#" + grupoId + " .option-card").forEach(c => c.classList.remove("selected"));
+  // Seleccionar opción seguro
+  function selectOpcion(valor, btn) {
+    document.querySelectorAll("#opts-seguro .option-card").forEach(c => c.classList.remove("selected"));
     btn.classList.add("selected");
-    if (campo === "plan")   planSeleccionado   = valor;
-    if (campo === "seguro") seguroSeleccionado = valor;
-    document.getElementById("err-" + campo).textContent = "";
+    seguroSeleccionado = valor;
+    document.getElementById("err-seguro").textContent = "";
   }
 
   // Validación
@@ -660,11 +625,6 @@
     if (!edad || edad < 1 || edad > 120) {
       document.getElementById("s-edad").classList.add("invalid");
       document.getElementById("err-s-edad").textContent = "Ingresa una edad válida (1–120)";
-      ok = false;
-    }
-
-    if (!planSeleccionado) {
-      document.getElementById("err-plan").textContent = "Por favor selecciona una opción";
       ok = false;
     }
 
@@ -708,7 +668,7 @@
       telefono:    parseInt(document.getElementById("s-telefono").value, 10),
       edad:        parseInt(document.getElementById("s-edad").value, 10),
       producto:    "",
-      comentarios: `Plan de salud: ${planSeleccionado}. Seguro oncológico: ${seguroSeleccionado}.`,
+      comentarios: `Seguro oncológico: ${seguroSeleccionado}.`,
     };
 
     try {
@@ -731,3 +691,4 @@
 </script>
 </body>
 </html>
+

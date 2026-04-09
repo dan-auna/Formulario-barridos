@@ -293,16 +293,7 @@ input, select, textarea {
   -webkit-appearance: none;
 }
 
-input::placeholder, textarea::placeholder {
-  color: var(--slate-300);
-  font-weight: 400;
-}
-
-input:not(:placeholder-shown),
-textarea:not(:placeholder-shown) {
-  color: var(--slate-900);
-  font-weight: 500;
-}
+input::placeholder, textarea::placeholder { color: var(--slate-400); }
 
 input:focus, select:focus, textarea:focus {
   border-color: var(--blue-500);
@@ -690,6 +681,27 @@ form { padding: 2rem; }
 .btn-refresh svg { width: 16px; height: 16px; }
 .btn-refresh:hover { background: var(--blue-100); border-color: var(--blue-200); }
 .btn-refresh.spinning svg { animation: spin 0.7s linear infinite; }
+
+.search-bar-wrap {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--slate-100);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--slate-50);
+}
+
+.search-bar-wrap svg { width: 18px; height: 18px; color: var(--slate-400); flex-shrink: 0; }
+
+.search-bar-wrap input {
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+
+.search-bar-wrap input:focus { box-shadow: none; border: none; }
 
 /* ── TABLE ── */
 #tabla-registros { padding: 0; overflow-x: auto; }
@@ -1359,221 +1371,3 @@ form { padding: 2rem; }
   .instrucciones { flex-direction: column; }
 }
 
-/* ══════════════════════════════════════════════
-   PLACEHOLDER MÁS TENUE (todo el sitio)
-══════════════════════════════════════════════ */
-input::placeholder,
-textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
-
-/* ══════════════════════════════════════════════
-   YES/NO CARDS (formulario principal)
-══════════════════════════════════════════════ */
-.label-inline {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--slate-700);
-  margin-bottom: 8px;
-}
-
-.label-inline svg {
-  width: 15px;
-  height: 15px;
-  color: var(--blue-500);
-  flex-shrink: 0;
-}
-
-.yesno-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-.yesno-card {
-  border: 2px solid var(--slate-200);
-  border-radius: var(--radius-md);
-  padding: 0.875rem 1rem;
-  cursor: pointer;
-  transition: all var(--transition);
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  background: var(--white);
-  font-family: 'Outfit', sans-serif;
-  text-align: left;
-  width: 100%;
-  box-shadow: none;
-  margin: 0;
-}
-
-.yesno-card:hover { border-color: var(--blue-400); background: var(--blue-50); }
-
-.yesno-card.selected {
-  border-color: var(--blue-600);
-  background: var(--blue-50);
-  box-shadow: 0 0 0 3px rgba(0,95,204,0.10);
-}
-
-.yesno-emoji { font-size: 1.1rem; flex-shrink: 0; }
-
-.yesno-radio {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--slate-300);
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition);
-}
-
-.yesno-card.selected .yesno-radio {
-  border-color: var(--blue-600);
-  background: var(--blue-600);
-}
-
-.yesno-dot {
-  width: 7px;
-  height: 7px;
-  background: white;
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-.yesno-card.selected .yesno-dot { opacity: 1; }
-
-.yesno-text {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: var(--slate-700);
-}
-
-.yesno-card.selected .yesno-text { color: var(--blue-800); }
-
-/* ══════════════════════════════════════════════
-   RECORDS HEADER — actions group
-══════════════════════════════════════════════ */
-.records-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.btn-export {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--green-100);
-  border: 1.5px solid #6ee7b7;
-  color: var(--green-600);
-  border-radius: var(--radius-sm);
-  padding: 8px 14px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  margin: 0;
-  width: auto;
-  box-shadow: none;
-}
-
-.btn-export svg { width: 15px; height: 15px; }
-.btn-export:hover { background: #a7f3d0; border-color: var(--green-500); }
-
-/* ══════════════════════════════════════════════
-   FILTERS BAR (search + date)
-══════════════════════════════════════════════ */
-.filters-bar {
-  border-bottom: 1px solid var(--slate-100);
-  background: var(--slate-50);
-}
-
-.search-bar-wrap {
-  padding: 0.875rem 1.5rem;
-  border-bottom: 1px solid var(--slate-100);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--slate-50);
-}
-
-.search-bar-wrap svg { width: 18px; height: 18px; color: var(--slate-400); flex-shrink: 0; }
-
-.search-bar-wrap input {
-  background: none;
-  border: none;
-  box-shadow: none;
-  padding: 4px 0;
-  font-size: 0.9rem;
-}
-
-.search-bar-wrap input:focus { box-shadow: none; border: none; }
-
-.date-filter-wrap {
-  padding: 0.75rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.date-filter-wrap svg { width: 16px; height: 16px; color: var(--slate-400); flex-shrink: 0; }
-
-.date-filter-wrap input[type="date"] {
-  padding: 6px 10px;
-  font-size: 0.82rem;
-  background: var(--white);
-  border: 1.5px solid var(--slate-200);
-  border-radius: var(--radius-sm);
-  color: var(--slate-700);
-  cursor: pointer;
-  width: auto;
-  min-width: 130px;
-  font-family: 'Outfit', sans-serif;
-}
-
-.date-filter-wrap input[type="date"]:focus {
-  border-color: var(--blue-500);
-  box-shadow: 0 0 0 3px rgba(0,123,195,0.12);
-}
-
-.date-sep {
-  font-size: 0.8rem;
-  color: var(--slate-400);
-  font-weight: 500;
-}
-
-.btn-clear-dates {
-  width: 30px;
-  height: 30px;
-  background: none;
-  border: 1.5px solid var(--slate-200);
-  border-radius: 6px;
-  color: var(--slate-400);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin: 0;
-  transition: all var(--transition);
-  box-shadow: none;
-  width: auto;
-  min-width: 30px;
-}
-
-.btn-clear-dates svg { width: 13px; height: 13px; }
-.btn-clear-dates:hover { background: var(--red-100); border-color: var(--red-500); color: var(--red-500); }
-
-@media (max-width: 600px) {
-  .records-actions { gap: 0.4rem; }
-  .btn-export { padding: 7px 10px; font-size: 0.78rem; }
-  .date-filter-wrap { padding: 0.6rem 1rem; gap: 6px; }
-  .date-filter-wrap input[type="date"] { min-width: 110px; font-size: 0.78rem; }
-}

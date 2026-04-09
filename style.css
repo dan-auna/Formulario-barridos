@@ -1086,3 +1086,215 @@ form { padding: 2rem; }
   .modal-footer { padding: 0.875rem 1.25rem 1.25rem; flex-direction: column-reverse; }
   .btn-cancel, .btn-save { width: 100%; justify-content: center; }
 }
+
+/* ══════════════════════════════════════════════
+   ENCUESTA TAB
+══════════════════════════════════════════════ */
+.encuesta-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--slate-200);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.encuesta-header {
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.encuesta-header-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.encuesta-header-icon svg { width: 24px; height: 24px; color: white; }
+
+.encuesta-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 3px;
+}
+
+.encuesta-sub {
+  font-size: 0.83rem;
+  color: rgba(255,255,255,0.72);
+}
+
+.encuesta-body {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Link section */
+.link-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.link-label svg { width: 14px; height: 14px; color: var(--blue-500); }
+
+.link-box {
+  display: flex;
+  align-items: center;
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.link-text {
+  flex: 1;
+  padding: 11px 14px;
+  font-size: 0.82rem;
+  color: var(--blue-700);
+  font-weight: 500;
+  word-break: break-all;
+  font-family: 'Outfit', monospace;
+}
+
+.btn-copy {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  background: var(--blue-50);
+  border: none;
+  border-left: 1.5px solid var(--slate-200);
+  color: var(--blue-600);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.btn-copy svg { width: 16px; height: 16px; }
+.btn-copy:hover { background: var(--blue-100); }
+
+/* QR section */
+.qr-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.qr-wrapper {
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-container {
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-container img,
+.qr-container canvas {
+  border-radius: 8px;
+}
+
+.qr-loading {
+  text-align: center;
+  color: var(--slate-400);
+}
+
+.btn-download-qr {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--slate-100);
+  border: 1.5px solid var(--slate-200);
+  color: var(--slate-700);
+  border-radius: var(--radius-sm);
+  padding: 9px 20px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  width: auto;
+  margin: 0;
+  box-shadow: none;
+}
+
+.btn-download-qr svg { width: 16px; height: 16px; }
+.btn-download-qr:hover { background: var(--blue-50); border-color: var(--blue-200); color: var(--blue-700); }
+
+/* Instrucciones */
+.instrucciones {
+  display: flex;
+  gap: 1rem;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.instruccion-item {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.instruccion-num {
+  width: 26px;
+  height: 26px;
+  background: var(--blue-600);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.instruccion-item p {
+  font-size: 0.83rem;
+  color: var(--blue-800);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .encuesta-header { padding: 1.25rem; flex-direction: column; align-items: flex-start; }
+  .encuesta-body { padding: 1.25rem; gap: 1.5rem; }
+  .instrucciones { flex-direction: column; }
+}

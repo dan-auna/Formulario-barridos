@@ -6,7 +6,9 @@ const URL_GOOGLE_SCRIPT =
   "https://script.google.com/macros/s/AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA/exec";
 
 // ─── Todos los leads (cache para búsqueda) ───
-let allLeads = [];
+let allLeads    = [];
+let currentPage = 1;
+const PAGE_SIZE = 20;
 
 /* ══════════════════════════════════════════════
    SHOW / HIDE PASSWORD
@@ -354,6 +356,20 @@ async function verRegistros() {
       ? todosLosLeads.map(normalizarClaves)
       : todosLosLeads.filter((l) => l.usuario === miUser).map(normalizarClaves);
 
+    // Ordenar de más nuevo a más antiguo
+    allLeads.sort((a, b) => {
+      const da = new Date(a.fecha);
+      const db = new Date(b.fecha);
+      // Fechas válidas: comparar numéricamente
+      if (!isNaN(da) && !isNaN(db)) return db - da;
+      // Si alguna no parsea, las ponemos al final
+      if (isNaN(da)) return 1;
+      if (isNaN(db)) return -1;
+      return 0;
+    });
+
+    currentPage = 1;
+
     document.getElementById("records-sub").textContent =
       `${allLeads.length} lead${allLeads.length !== 1 ? "s" : ""} encontrado${allLeads.length !== 1 ? "s" : ""}`;
 
@@ -382,6 +398,7 @@ function filtrarTabla() {
       (l.telefono  || "").toString().includes(q)     ||
       (l.agente    || l.usuario || "").toLowerCase().includes(q)
   );
+  currentPage = 1;
   renderTable(filtrados, document.getElementById("tabla-registros"));
 }
 
@@ -428,8 +445,17 @@ function renderTable(datos, contenedor) {
     return;
   }
 
-  const rol = sessionStorage.getItem("rolActivo");
+  const rol           = sessionStorage.getItem("rolActivo");
   const mostrarAsesor = rol === "Administrador";
+  const totalPages    = Math.ceil(datos.length / PAGE_SIZE);
+
+  // Clamp currentPage
+  if (currentPage < 1)           currentPage = 1;
+  if (currentPage > totalPages)  currentPage = totalPages;
+
+  const start    = (currentPage - 1) * PAGE_SIZE;
+  const end      = Math.min(start + PAGE_SIZE, datos.length);
+  const pagSlice = datos.slice(start, end);
 
   let html = `
     <div style="overflow-x:auto">
@@ -448,10 +474,9 @@ function renderTable(datos, contenedor) {
       </thead>
       <tbody>`;
 
-  datos.forEach((d, i) => {
+  pagSlice.forEach((d) => {
     const badgeClass = getBadgeClass(d.producto);
-    // guardamos el índice global en allLeads para poder editar
-    const globalIdx = allLeads.indexOf(d);
+    const globalIdx  = allLeads.indexOf(d);
     html += `
       <tr class="row-clickable" onclick="abrirEditModal(${globalIdx})" title="Clic para editar este lead">
         <td style="white-space:nowrap; color:var(--slate-500); font-size:0.8rem">${formatFecha(d.fecha)}</td>
@@ -465,13 +490,63 @@ function renderTable(datos, contenedor) {
       </tr>`;
   });
 
-  html += `
-      </tbody>
-    </table>
-    </div>
-    <div class="table-footer">${datos.length} registro${datos.length !== 1 ? "s" : ""}</div>`;
+  html += `</tbody></table></div>`;
+
+  // ── Footer con paginación ──
+  html += `<div class="table-footer">`;
+
+  if (totalPages > 1) {
+    html += `<div class="pagination">`;
+
+    // Botón anterior
+    html += `<button class="pag-btn" onclick="cambiarPagina(${currentPage - 1}, ${JSON.stringify(datos).replace(/"/g, '&quot;')})" ${currentPage === 1 ? "disabled" : ""}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>`;
+
+    // Números de página
+    const range = paginationRange(currentPage, totalPages);
+    range.forEach((item) => {
+      if (item === "…") {
+        html += `<span class="pag-ellipsis">…</span>`;
+      } else {
+        html += `<button class="pag-btn pag-num ${item === currentPage ? "active" : ""}" onclick="cambiarPagina(${item}, ${JSON.stringify(datos).replace(/"/g, '&quot;')})">${item}</button>`;
+      }
+    });
+
+    // Botón siguiente
+    html += `<button class="pag-btn" onclick="cambiarPagina(${currentPage + 1}, ${JSON.stringify(datos).replace(/"/g, '&quot;')})" ${currentPage === totalPages ? "disabled" : ""}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>`;
+
+    html += `</div>`; // /pagination
+  }
+
+  html += `<span class="footer-count">Mostrando ${start + 1}–${end} de ${datos.length} registro${datos.length !== 1 ? "s" : ""}</span>`;
+  html += `</div>`; // /table-footer
 
   contenedor.innerHTML = html;
+}
+
+// ── Rango de páginas con elipsis ──
+function paginationRange(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages = [];
+  if (current <= 4) {
+    pages.push(1, 2, 3, 4, 5, "…", total);
+  } else if (current >= total - 3) {
+    pages.push(1, "…", total - 4, total - 3, total - 2, total - 1, total);
+  } else {
+    pages.push(1, "…", current - 1, current, current + 1, "…", total);
+  }
+  return pages;
+}
+
+// ── Cambiar página ──
+function cambiarPagina(page, datos) {
+  currentPage = page;
+  renderTable(datos, document.getElementById("tabla-registros"));
+  // Scroll suave al inicio de la tabla
+  document.getElementById("tabla-registros").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 /* ══════════════════════════════════════════════

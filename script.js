@@ -171,7 +171,8 @@ function switchTab(tab) {
   document.getElementById(`tab-${tab}`).classList.add("active");
   document.getElementById(`panel-${tab}`).classList.add("active");
 
-  if (tab === "records") verRegistros();
+  if (tab === "records")  verRegistros();
+  if (tab === "encuesta") iniciarEncuesta();
 }
 
 /* ══════════════════════════════════════════════
@@ -615,4 +616,91 @@ function showToastEdit() {
     toast.style.display   = "none";
     toast.style.animation = "";
   }, 3500);
+}
+
+/* ══════════════════════════════════════════════
+   ENCUESTA — QR Y LINK PERSONALIZADO
+══════════════════════════════════════════════ */
+let qrInstance = null;
+
+function iniciarEncuesta() {
+  const usuario = sessionStorage.getItem("usuarioActivo") || "asesor";
+  // La URL de la encuesta pública con el usuario codificado como parámetro
+  const baseUrl = window.location.href.replace(/\/[^/]*$/, "") + "/encuesta.html";
+  const encuestaUrl = `${baseUrl}?u=${encodeURIComponent(usuario)}`;
+
+  // Mostrar el link
+  document.getElementById("encuesta-link-text").textContent = encuestaUrl;
+
+  // Generar QR solo una vez o si el usuario cambió
+  const container = document.getElementById("qr-container");
+  if (container.dataset.generatedFor === usuario) return; // ya generado
+  container.dataset.generatedFor = usuario;
+  container.innerHTML = ""; // limpiar
+
+  const LOGO_URL = "https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg";
+  const QR_SIZE  = 240;
+
+  qrInstance = new QRCode(container, {
+    text:          encuestaUrl,
+    width:         QR_SIZE,
+    height:        QR_SIZE,
+    colorDark:     "#002d72",
+    colorLight:    "#ffffff",
+    correctLevel:  QRCode.CorrectLevel.H, // nivel H para poder superponer logo
+  });
+
+  // Superponer logo Auna en el centro del QR
+  setTimeout(() => {
+    const canvas = container.querySelector("canvas");
+    if (!canvas) return;
+
+    const ctx    = canvas.getContext("2d");
+    const logo   = new Image();
+    logo.crossOrigin = "anonymous";
+    logo.onload = () => {
+      const logoSize   = QR_SIZE * 0.22;
+      const logoX      = (QR_SIZE - logoSize) / 2;
+      const logoY      = (QR_SIZE - logoSize) / 2;
+      const padding    = 6;
+      const radius     = 8;
+
+      // Fondo blanco redondeado para el logo
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(logoX - padding, logoY - padding, logoSize + padding * 2, logoSize + padding * 2, radius);
+      ctx.fill();
+
+      // Logo
+      ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
+    };
+    logo.src = LOGO_URL;
+  }, 200);
+}
+
+function copiarLink() {
+  const link = document.getElementById("encuesta-link-text").textContent;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn  = document.getElementById("btn-copy");
+    const icon = document.getElementById("copy-icon");
+    icon.innerHTML = `<polyline points="20 6 9 17 4 12"/>`;
+    btn.style.background = "var(--green-500)";
+    btn.style.color = "white";
+    setTimeout(() => {
+      icon.innerHTML = `<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>`;
+      btn.style.background = "";
+      btn.style.color = "";
+    }, 2000);
+  });
+}
+
+function descargarQR() {
+  const canvas = document.querySelector("#qr-container canvas");
+  if (!canvas) return;
+
+  const usuario = sessionStorage.getItem("usuarioActivo") || "asesor";
+  const link    = document.createElement("a");
+  link.download = `QR_Encuesta_${usuario}.png`;
+  link.href     = canvas.toDataURL("image/png");
+  link.click();
 }

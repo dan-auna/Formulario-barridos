@@ -96,8 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") document.getElementById("password").focus();
   });
 
-  // Product select preview
-  document.getElementById("producto").addEventListener("change", updateProductChip);
+  // Product select preview — removed (product field no longer exists)
 
   // ── Restricciones en inputs numéricos ──
   // Teléfono: solo dígitos, máximo 9
@@ -178,19 +177,16 @@ function switchTab(tab) {
 }
 
 /* ══════════════════════════════════════════════
-   PRODUCT CHIP PREVIEW
+   YES/NO SELECTOR (plan de salud y seguro onco)
 ══════════════════════════════════════════════ */
-function updateProductChip() {
-  const val     = document.getElementById("producto").value;
-  const preview = document.getElementById("product-preview");
-  const chip    = document.getElementById("product-chip-display");
+const yesNoState = { plan: null, onco: null };
 
-  if (val) {
-    preview.style.display = "block";
-    chip.textContent = `✔ ${val} seleccionado`;
-  } else {
-    preview.style.display = "none";
-  }
+function selectYesNo(campo, valor, btn) {
+  const groupId = campo === "plan" ? "opts-plan" : "opts-onco";
+  document.querySelectorAll(`#${groupId} .yesno-card`).forEach(c => c.classList.remove("selected"));
+  btn.classList.add("selected");
+  yesNoState[campo] = valor;
+  document.getElementById(`err-${campo}`).textContent = "";
 }
 
 /* ══════════════════════════════════════════════
@@ -200,18 +196,15 @@ function validateForm() {
   let valid = true;
 
   const fields = [
-    { id: "nombre",    errId: "err-nombre",   msg: "Ingresa el nombre completo",   check: (v) => v.trim().length >= 3 },
-    { id: "telefono",  errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
-    { id: "edad",      errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
-    { id: "producto",  errId: "err-producto", msg: "Selecciona un producto",       check: (v) => v !== "" },
+    { id: "nombre",   errId: "err-nombre",   msg: "Ingresa el nombre completo",                    check: (v) => v.trim().length >= 3 },
+    { id: "telefono", errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos",  check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
+    { id: "edad",     errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",                check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
   ];
 
   fields.forEach(({ id, errId, msg, check }) => {
     const el  = document.getElementById(id);
     const err = document.getElementById(errId);
-    const val = el.value;
-
-    if (!check(val)) {
+    if (!check(el.value)) {
       el.classList.add("invalid");
       err.textContent = msg;
       valid = false;
@@ -221,11 +214,21 @@ function validateForm() {
     }
   });
 
+  if (!yesNoState.plan) {
+    document.getElementById("err-plan").textContent = "Por favor selecciona una opción";
+    valid = false;
+  }
+
+  if (!yesNoState.onco) {
+    document.getElementById("err-onco").textContent = "Por favor selecciona una opción";
+    valid = false;
+  }
+
   return valid;
 }
 
 // Remove invalid class on input
-["nombre", "telefono", "edad", "producto"].forEach((id) => {
+["nombre", "telefono", "edad"].forEach((id) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input",  () => { el.classList.remove("invalid"); document.getElementById(`err-${id}`)?.textContent && (document.getElementById(`err-${id}`).textContent = ""); });
@@ -263,8 +266,13 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     nombre:      document.getElementById("nombre").value.trim(),
     telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
     edad:        parseInt(document.getElementById("edad").value, 10),
-    producto:    document.getElementById("producto").value,
-    comentarios: document.getElementById("comentarios").value.trim(),
+    producto:    "",
+    comentarios: (() => {
+                   const planResp = yesNoState.plan ? `Plan de salud: ${yesNoState.plan}.` : "";
+                   const oncoResp = yesNoState.onco ? `Seguro oncológico: ${yesNoState.onco}.` : "";
+                   const extra    = document.getElementById("comentarios").value.trim();
+                   return [planResp, oncoResp, extra].filter(Boolean).join(" ");
+                 })(),
   };
 
   try {
@@ -275,11 +283,14 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     });
 
     this.reset();
-    document.getElementById("product-preview").style.display = "none";
+    // Reset yes/no buttons
+    yesNoState.plan = null;
+    yesNoState.onco = null;
+    document.querySelectorAll(".yesno-card").forEach(c => c.classList.remove("selected"));
     showToast();
 
     // Clear validation states
-    ["nombre", "telefono", "edad", "producto"].forEach((id) => {
+    ["nombre", "telefono", "edad"].forEach((id) => {
       document.getElementById(id)?.classList.remove("invalid");
     });
 
@@ -387,19 +398,129 @@ async function verRegistros() {
 }
 
 /* ══════════════════════════════════════════════
-   FILTRAR TABLA
+   FILTROS: BÚSQUEDA + FECHA
 ══════════════════════════════════════════════ */
-function filtrarTabla() {
-  const q = document.getElementById("search-input").value.toLowerCase();
-  const filtrados = allLeads.filter(
-    (l) =>
-      (l.nombre    || "").toLowerCase().includes(q) ||
-      (l.producto  || "").toLowerCase().includes(q) ||
-      (l.telefono  || "").toString().includes(q)     ||
-      (l.agente    || l.usuario || "").toLowerCase().includes(q)
-  );
+function aplicarFiltros() {
+  const q       = document.getElementById("search-input").value.toLowerCase();
+  const desde   = document.getElementById("fecha-desde").value; // "YYYY-MM-DD"
+  const hasta   = document.getElementById("fecha-hasta").value;
+
+  const filtrados = allLeads.filter((l) => {
+    // Filtro texto
+    const textoOk =
+      !q ||
+      (l.nombre   || "").toLowerCase().includes(q) ||
+      (l.producto || "").toLowerCase().includes(q) ||
+      (l.telefono || "").toString().includes(q)    ||
+      (l.agente   || l.usuario || "").toLowerCase().includes(q);
+
+    // Filtro fecha
+    let fechaOk = true;
+    if (desde || hasta) {
+      const fechaLead = parseFechaParaFiltro(l.fecha);
+      if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T00:00:00");
+      if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T23:59:59");
+      if (!fechaLead) fechaOk = false;
+    }
+
+    return textoOk && fechaOk;
+  });
+
   currentPage = 1;
   renderTable(filtrados, document.getElementById("tabla-registros"));
+}
+
+// Parsear fecha del lead para comparación (acepta ISO y "mm/dd/yyyy h:mm am/pm")
+function parseFechaParaFiltro(valor) {
+  if (!valor) return null;
+  const d = new Date(valor);
+  if (!isNaN(d.getTime())) return d;
+  // Intento manual: "04/08/2026 2:12 pm"
+  const m = String(valor).match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d+):(\d{2})\s*(am|pm)/i);
+  if (m) {
+    let h = parseInt(m[4], 10);
+    if (m[6].toLowerCase() === "pm" && h !== 12) h += 12;
+    if (m[6].toLowerCase() === "am" && h === 12) h = 0;
+    return new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]), h, parseInt(m[5]));
+  }
+  return null;
+}
+
+function limpiarFechas() {
+  document.getElementById("fecha-desde").value = "";
+  document.getElementById("fecha-hasta").value = "";
+  aplicarFiltros();
+}
+
+// Mantener alias para compatibilidad
+function filtrarTabla() { aplicarFiltros(); }
+
+/* ══════════════════════════════════════════════
+   EXPORTAR A EXCEL (CSV descargable)
+══════════════════════════════════════════════ */
+function exportarExcel() {
+  const q     = document.getElementById("search-input").value.toLowerCase();
+  const desde = document.getElementById("fecha-desde").value;
+  const hasta = document.getElementById("fecha-hasta").value;
+
+  // Usar los mismos filtros activos
+  const datos = allLeads.filter((l) => {
+    const textoOk =
+      !q ||
+      (l.nombre   || "").toLowerCase().includes(q) ||
+      (l.producto || "").toLowerCase().includes(q) ||
+      (l.telefono || "").toString().includes(q)    ||
+      (l.agente   || l.usuario || "").toLowerCase().includes(q);
+
+    let fechaOk = true;
+    if (desde || hasta) {
+      const fechaLead = parseFechaParaFiltro(l.fecha);
+      if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T00:00:00");
+      if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T23:59:59");
+      if (!fechaLead) fechaOk = false;
+    }
+    return textoOk && fechaOk;
+  });
+
+  if (datos.length === 0) {
+    alert("No hay registros para exportar con los filtros actuales.");
+    return;
+  }
+
+  const rol         = sessionStorage.getItem("rolActivo");
+  const mostrarAsesor = rol === "Administrador";
+
+  const headers = ["Fecha", "Nombre", "Teléfono", "Edad", "Producto", ...(mostrarAsesor ? ["Asesor"] : []), "Comentarios"];
+
+  const escapeCsv = (val) => {
+    const s = String(val ?? "").replace(/"/g, '""');
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+  };
+
+  const rows = [
+    headers.join(","),
+    ...datos.map(d => [
+      escapeCsv(formatFecha(d.fecha)),
+      escapeCsv(d.nombre || ""),
+      escapeCsv(String(d.telefono ?? d["teléfono"] ?? "")),
+      escapeCsv(d.edad ?? ""),
+      escapeCsv(d.producto || ""),
+      ...(mostrarAsesor ? [escapeCsv(d.agente || d.usuario || "")] : []),
+      escapeCsv(d.comentarios || ""),
+    ].join(","))
+  ];
+
+  const bom    = "\uFEFF"; // BOM para que Excel abra con tildes correctas
+  const blob   = new Blob([bom + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+  const url    = URL.createObjectURL(blob);
+  const link   = document.createElement("a");
+  const fecha  = new Date().toLocaleDateString("es-PE").replace(/\//g, "-");
+  const usuario = sessionStorage.getItem("agenteActivo") || sessionStorage.getItem("usuarioActivo") || "leads";
+
+  link.href     = url;
+  link.download = `Leads_${usuario}_${fecha}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 /* ══════════════════════════════════════════════
@@ -779,4 +900,3 @@ function descargarQR() {
   link.href     = canvas.toDataURL("image/png");
   link.click();
 }
-

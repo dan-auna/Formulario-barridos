@@ -647,19 +647,13 @@ form { padding: 2rem; }
 }
 
 .records-header {
-  padding: 1.25rem 2rem;
+  padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--slate-100);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-}
-
-.records-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .records-title {
@@ -673,28 +667,6 @@ form { padding: 2rem; }
   color: var(--slate-500);
   margin-top: 2px;
 }
-
-.btn-export {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: linear-gradient(135deg, #16a34a, #15803d);
-  border: none;
-  color: white;
-  border-radius: var(--radius-sm);
-  padding: 8px 16px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  margin: 0;
-  width: auto;
-  box-shadow: 0 2px 8px rgba(22,163,74,0.30);
-}
-
-.btn-export svg { width: 15px; height: 15px; }
-.btn-export:hover { background: linear-gradient(135deg, #15803d, #166534); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,0.40); }
 
 .btn-refresh {
   display: flex;
@@ -719,166 +691,8 @@ form { padding: 2rem; }
 .btn-refresh:hover { background: var(--blue-100); border-color: var(--blue-200); }
 .btn-refresh.spinning svg { animation: spin 0.7s linear infinite; }
 
-/* ── QUICK FILTERS ── */
-.quick-filters {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0.875rem 2rem;
-  border-bottom: 1px solid var(--slate-100);
-  flex-wrap: wrap;
-  background: var(--slate-50);
-}
-
-.qf-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--white);
-  border: 1.5px solid var(--slate-200);
-  color: var(--slate-600);
-  border-radius: 100px;
-  padding: 5px 14px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  white-space: nowrap;
-  margin: 0;
-  width: auto;
-  box-shadow: none;
-}
-
-.qf-btn svg { width: 13px; height: 13px; }
-.qf-btn:hover { border-color: var(--blue-300); color: var(--blue-700); background: var(--blue-50); }
-
-.qf-btn.active {
-  background: var(--blue-800);
-  border-color: var(--blue-800);
-  color: white;
-  box-shadow: 0 2px 6px rgba(0,45,114,0.22);
-}
-
-/* ── RANGO WRAP ── */
-.rango-wrap {
-  padding: 0.75rem 2rem;
-  background: var(--blue-50);
-  border-bottom: 1px solid var(--blue-100);
-  animation: fadeUp 0.2s ease;
-}
-
 /* ── TABLE ── */
 #tabla-registros { padding: 0; overflow-x: auto; }
-
-/* ══════════════════════════════════════════════
-   EXPORT MODAL EXTRAS
-══════════════════════════════════════════════ */
-.export-modal-header { background: linear-gradient(135deg, #166534, #16a34a); }
-
-.export-modal-card { max-width: 520px; }
-
-.export-body { padding: 1.5rem; }
-
-.export-section-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--slate-500);
-  margin-bottom: 0.75rem;
-}
-
-.export-period-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 0.6rem;
-  margin-bottom: 1rem;
-}
-
-.export-period-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: var(--slate-50);
-  border: 1.5px solid var(--slate-200);
-  color: var(--slate-600);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 0.5rem;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition);
-  text-align: center;
-  line-height: 1.3;
-  width: 100%;
-  margin: 0;
-  box-shadow: none;
-}
-
-.export-period-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-.export-period-btn:hover {
-  border-color: #16a34a;
-  color: #15803d;
-  background: #f0fdf4;
-}
-
-.export-period-btn.active {
-  background: #f0fdf4;
-  border-color: #16a34a;
-  color: #15803d;
-  box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
-  font-weight: 700;
-}
-
-.export-rango {
-  margin-bottom: 1rem;
-  animation: fadeUp 0.2s ease;
-}
-
-.export-preview {
-  display: flex;
-  gap: 1rem;
-  background: var(--slate-50);
-  border: 1.5px solid var(--slate-200);
-  border-radius: var(--radius-md);
-  padding: 1rem 1.25rem;
-  margin-top: 0.75rem;
-}
-
-.export-preview-stat {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.preview-num {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--blue-800);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.preview-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--slate-400);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-@media (max-width: 500px) {
-  .export-period-grid { grid-template-columns: 1fr 1fr; }
-  .records-header { padding: 1rem; }
-  .quick-filters { padding: 0.75rem 1rem; }
-  .rango-wrap { padding: 0.75rem 1rem; }
-}
 
 .data-table {
   width: 100%;
@@ -1763,3 +1577,4 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   .date-filter-wrap { padding: 0.6rem 1rem; gap: 6px; }
   .date-filter-wrap input[type="date"] { min-width: 110px; font-size: 0.78rem; }
 }
+

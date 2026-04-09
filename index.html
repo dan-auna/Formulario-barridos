@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -118,6 +119,10 @@
           <button class="tab" id="tab-records" onclick="switchTab('records')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H5a2 2 0 0 0-2 2v2h18v-2a2 2 0 0 0-2-2h-4"/><path d="M12 3v10m-4-4 4 4 4-4"/></svg>
             Mis Registros
+          </button>
+          <button class="tab" id="tab-encuesta" onclick="switchTab('encuesta')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Encuesta
           </button>
         </div>
 
@@ -241,6 +246,76 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                 <p>Haz clic en <strong>Actualizar</strong> para cargar tus registros.</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Tab: Encuesta ── -->
+        <div id="panel-encuesta" class="tab-panel">
+          <div class="encuesta-card">
+
+            <div class="encuesta-header">
+              <div class="encuesta-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              </div>
+              <div>
+                <h2 class="encuesta-title">Tu Encuesta Personalizada</h2>
+                <p class="encuesta-sub">Comparte este QR o enlace con tus prospectos para que llenen sus datos</p>
+              </div>
+            </div>
+
+            <div class="encuesta-body">
+
+              <!-- Link section -->
+              <div class="link-section">
+                <label class="link-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                  Enlace único de encuesta
+                </label>
+                <div class="link-box">
+                  <span id="encuesta-link-text" class="link-text">Cargando...</span>
+                  <button class="btn-copy" id="btn-copy" onclick="copiarLink()" title="Copiar enlace">
+                    <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- QR section -->
+              <div class="qr-section">
+                <label class="link-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
+                  Código QR — escanear con el celular
+                </label>
+                <div class="qr-wrapper">
+                  <div id="qr-container" class="qr-container">
+                    <div class="qr-loading">
+                      <div class="loading-dots"><span></span><span></span><span></span></div>
+                      <p>Generando QR...</p>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-download-qr" onclick="descargarQR()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Descargar QR
+                </button>
+              </div>
+
+              <!-- Instrucciones -->
+              <div class="instrucciones">
+                <div class="instruccion-item">
+                  <div class="instruccion-num">1</div>
+                  <p>Muestra el QR a tu prospecto para que lo escanee con su celular</p>
+                </div>
+                <div class="instruccion-item">
+                  <div class="instruccion-num">2</div>
+                  <p>El prospecto llena el formulario con sus datos</p>
+                </div>
+                <div class="instruccion-item">
+                  <div class="instruccion-num">3</div>
+                  <p>Los datos se guardan automáticamente en tus registros</p>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

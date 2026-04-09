@@ -1,568 +1,734 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auna — Portal de Asesores</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asesoría Gratuita de Salud — Auna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue-900: #001a4d;
+      --blue-800: #002d72;
+      --blue-700: #003d99;
+      --blue-600: #005fcc;
+      --blue-500: #007bc3;
+      --blue-400: #00a9e0;
+      --blue-100: #e8f4fd;
+      --blue-50:  #f0f8ff;
+      --slate-900: #0f172a;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --green-600: #059669;
+      --green-500: #10b981;
+      --green-100: #d1fae5;
+      --red-500:   #ef4444;
+      --red-100:   #fee2e2;
+      --white: #ffffff;
+      --shadow-lg: 0 16px 48px rgba(0,45,114,0.18);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(150deg, var(--blue-900) 0%, var(--blue-700) 40%, var(--blue-500) 80%, var(--blue-400) 100%);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem 5rem;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      top: -150px; right: -150px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    /* ── CARD ── */
+    .survey-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 540px;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── HEADER ── */
+    .survey-header {
+      background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 100%);
+      padding: 2rem 2rem 1.75rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .survey-header::before {
+      content: '';
+      position: absolute;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.08);
+      top: -110px; right: -90px;
+      pointer-events: none;
+    }
+
+    .survey-logo {
+      width: 80px;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      position: relative; z-index: 1;
+    }
+
+    .promo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(251,191,36,0.18);
+      border: 1px solid rgba(251,191,36,0.40);
+      color: #fde68a;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 1rem;
+      position: relative; z-index: 1;
+    }
+
+    .promo-badge svg { width: 12px; height: 12px; fill: #fde68a; flex-shrink: 0; }
+
+    .survey-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.65rem;
+      color: white;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+      position: relative; z-index: 1;
+    }
+
+    .survey-header h1 em { font-style: italic; color: #93c5fd; }
+
+    .survey-header p {
+      font-size: 0.875rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      position: relative; z-index: 1;
+    }
+
+    /* Beneficios strip */
+    .benefits-bar {
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.90);
+      white-space: nowrap;
+    }
+
+    .benefit-item svg { width: 13px; height: 13px; color: #6ee7b7; flex-shrink: 0; }
+
+    /* ── FORM BODY ── */
+    .survey-body { padding: 2rem; }
+
+    .form-intro {
+      font-size: 0.875rem;
+      color: var(--slate-600);
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+      padding: 0.875rem 1rem;
+      background: var(--blue-50);
+      border-left: 3px solid var(--blue-400);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    /* ── FIELDS ── */
+    .field-group { margin-bottom: 1.35rem; }
+
+    .field-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 8px;
+    }
+
+    .field-label svg { width: 15px; height: 15px; color: var(--blue-500); flex-shrink: 0; }
+
+    input[type="text"],
+    input[type="tel"] {
+      width: 100%;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      color: var(--slate-900);
+      font-weight: 500;
+      background: var(--slate-50);
+      border: 1.5px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+      -webkit-appearance: none;
+    }
+
+    input::placeholder {
+      color: var(--slate-300);
+      font-weight: 400;
+    }
+
+    input:not(:placeholder-shown) {
+      color: var(--slate-900);
+      font-weight: 500;
+    }
+
+    input:focus {
+      border-color: var(--blue-500);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,123,195,0.12);
+    }
+
+    input.invalid {
+      border-color: var(--red-500);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.10);
+    }
+
+    .field-hint {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--slate-400);
+      margin-top: 4px;
+    }
+
+    .field-error {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--red-500);
+      font-weight: 500;
+      margin-top: 5px;
+      min-height: 16px;
+    }
+
+    .form-divider {
+      height: 1px;
+      background: var(--slate-100);
+      margin: 1.75rem 0;
+    }
+
+    /* ── OPTION CARDS ── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .option-card {
+      border: 2px solid var(--slate-200);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--white);
+      font-family: 'Outfit', sans-serif;
+      text-align: left;
+      width: 100%;
+    }
+
+    .option-card:hover { border-color: var(--blue-400); background: var(--blue-50); }
+
+    .option-card.selected {
+      border-color: var(--blue-600);
+      background: var(--blue-50);
+      box-shadow: 0 0 0 3px rgba(0,95,204,0.10);
+    }
+
+    .option-radio {
+      width: 20px; height: 20px;
+      border: 2px solid var(--slate-300);
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+    }
+
+    .option-card.selected .option-radio { border-color: var(--blue-600); background: var(--blue-600); }
+
+    .option-radio-dot {
+      width: 8px; height: 8px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .option-card.selected .option-radio-dot { opacity: 1; }
+
+    .option-emoji { font-size: 1.25rem; flex-shrink: 0; }
+
+    .option-text { font-size: 0.88rem; font-weight: 600; color: var(--slate-700); line-height: 1.3; }
+    .option-card.selected .option-text { color: var(--blue-800); }
+
+    /* ── SUBMIT ── */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 16px rgba(0,95,204,0.35);
+      margin-top: 0.5rem;
+    }
+
+    .btn-submit svg { width: 20px; height: 20px; }
+    .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,95,204,0.45); }
+    .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    .submit-note {
+      text-align: center;
+      font-size: 0.74rem;
+      color: var(--slate-400);
+      margin-top: 0.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .submit-note svg { width: 11px; height: 11px; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── SUCCESS ── */
+    #screen-success {
+      display: none;
+      padding: 3rem 2rem;
+      text-align: center;
+      animation: fadeUp 0.5s ease;
+    }
+
+    .success-icon {
+      width: 80px; height: 80px;
+      background: var(--green-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+
+    .success-icon svg { width: 40px; height: 40px; color: var(--green-600); }
+
+    #screen-success h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.65rem;
+      color: var(--blue-800);
+      margin-bottom: 0.5rem;
+    }
+
+    #screen-success .success-lead {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--blue-600);
+      margin-bottom: 0.875rem;
+    }
+
+    #screen-success p {
+      font-size: 0.9rem;
+      color: var(--slate-500);
+      line-height: 1.65;
+    }
+
+    .success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-100);
+      border: 1px solid #6ee7b7;
+      color: var(--green-600);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 7px 16px;
+      border-radius: 100px;
+      margin-top: 1.5rem;
+    }
+
+    .success-badge svg { width: 14px; height: 14px; }
+
+    /* ── FOOTER ── */
+    .survey-footer {
+      padding: 1rem 2rem 1.5rem;
+      text-align: center;
+      font-size: 0.73rem;
+      color: var(--slate-400);
+      border-top: 1px solid var(--slate-100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .survey-footer svg { width: 12px; height: 12px; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.5); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 1rem 0.75rem 4rem; }
+      .survey-header { padding: 1.5rem 1.25rem 1.25rem; }
+      .survey-body { padding: 1.5rem 1.25rem; }
+      .benefits-bar { gap: 0.75rem; padding: 0.75rem 1rem; }
+      .options-grid { grid-template-columns: 1fr; }
+      #screen-success { padding: 2.5rem 1.25rem; }
+    }
+  </style>
 </head>
 <body>
 
-  <!-- ═══════════════════ LOGIN SCREEN ═══════════════════ -->
-  <section id="login-section" class="screen active">
-    <div class="login-split">
+<div class="survey-card">
 
-      <!-- Left panel: branding -->
-      <div class="login-brand">
-        <div class="brand-inner">
-          <div class="brand-badge">Portal Asesores</div>
-          <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg"
-               alt="Auna" class="brand-logo">
-          <h1 class="brand-headline">Gestiona tus<br><em>leads con éxito</em></h1>
-          <p class="brand-sub">Plataforma exclusiva para asesores del equipo Auna. Registra, consulta y haz seguimiento en tiempo real.</p>
-          <div class="brand-stats">
-            <div class="stat"><span class="stat-num">5</span><span class="stat-label">Productos</span></div>
-            <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Online</span></div>
-            <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">Acceso</span></div>
-          </div>
-        </div>
-        <div class="brand-decor">
-          <div class="decor-circle c1"></div>
-          <div class="decor-circle c2"></div>
-          <div class="decor-circle c3"></div>
-        </div>
-      </div>
-
-      <!-- Right panel: form -->
-      <div class="login-form-panel">
-        <div class="login-card">
-          <div class="login-card-top">
-            <h2>Bienvenido</h2>
-            <p>Ingresa tus credenciales para continuar</p>
-          </div>
-
-          <div class="field-group">
-            <label for="username">Usuario</label>
-            <div class="input-wrap">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-              <input type="text" id="username" placeholder="Tu nombre de usuario" autocomplete="username">
-            </div>
-          </div>
-
-          <div class="field-group">
-            <label for="password">Contraseña</label>
-            <div class="input-wrap">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
-              <button class="toggle-pass" type="button" aria-label="Mostrar contraseña" onclick="togglePass()">
-                <svg id="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <div id="login-error" class="error-msg" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Usuario o contraseña incorrectos
-          </div>
-
-          <button class="btn-primary" id="login-btn" onclick="login()">
-            <span class="btn-text">Iniciar Sesión</span>
-            <span class="btn-loader" style="display:none">
-              <span class="spinner"></span> Verificando...
-            </span>
-          </button>
-
-          <p class="login-footer-note">¿Problemas para ingresar? Contacta a tu coordinador.</p>
-        </div>
-      </div>
-
+  <!-- HEADER -->
+  <div class="survey-header">
+    <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg"
+         alt="Auna" class="survey-logo">
+    <div class="promo-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Promoción exclusiva por campaña
     </div>
-  </section>
+    <h1>¡Accede a tu<br><em>asesoría gratuita</em> de salud!</h1>
+    <p>Completa el formulario y obtén una evaluación personalizada<br>sin costo + acceso a nuestra promoción exclusiva.</p>
+  </div>
 
-  <!-- ═══════════════════ FORM SCREEN ═══════════════════ -->
-  <section id="form-section" class="screen" style="display:none">
+  <!-- Beneficios -->
+  <div class="benefits-bar">
+    <div class="benefit-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Asesoría 100% gratuita
+    </div>
+    <div class="benefit-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Promoción por tiempo limitado
+    </div>
+    <div class="benefit-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Sin compromiso
+    </div>
+  </div>
 
-    <!-- Top nav bar -->
-    <nav class="topbar">
-      <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/v1774998253/468951353_1098106335437147_8489372296479282912_n_insezr.jpg"
-           alt="Auna" class="topbar-logo">
-      <div class="topbar-center">
-        <span id="topbar-title">Formulario Barrido</span>
-      </div>
-      <div class="topbar-right">
-        <div class="user-chip">
-          <div class="user-avatar" id="user-avatar">A</div>
-          <span id="user-name-chip">Asesor</span>
-        </div>
-        <button class="btn-logout" onclick="logout()" title="Cerrar sesión">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </button>
-      </div>
-    </nav>
+  <!-- FORM -->
+  <div id="survey-body">
+    <div class="survey-body">
 
-    <!-- Main content -->
-    <main class="main-content">
-      <div class="content-wrapper">
+      <p class="form-intro">
+        Déjanos tus datos y un especialista Auna te presentará las mejores opciones de cobertura adaptadas a tu situación. <strong>¡Es completamente gratis!</strong>
+      </p>
 
-        <!-- Tab bar -->
-        <div class="tab-bar">
-          <button class="tab active" id="tab-form" onclick="switchTab('form')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Nuevo Lead
-          </button>
-          <button class="tab" id="tab-records" onclick="switchTab('records')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H5a2 2 0 0 0-2 2v2h18v-2a2 2 0 0 0-2-2h-4"/><path d="M12 3v10m-4-4 4 4 4-4"/></svg>
-            Mis Registros
-          </button>
-          <button class="tab" id="tab-encuesta" onclick="switchTab('encuesta')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            Encuesta
-          </button>
-        </div>
-
-        <!-- ── Tab: Formulario ── -->
-        <div id="panel-form" class="tab-panel active">
-          <div class="form-card">
-            <div class="form-card-header">
-              <div class="form-card-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </div>
-              <div>
-                <h2 class="form-card-title" id="form-title">Formulario Barrido</h2>
-                <p class="form-card-subtitle">Completa los datos del cliente potencial</p>
-              </div>
-            </div>
-
-            <form id="barrido-form" novalidate>
-              <div class="form-grid">
-
-                <div class="field-group full-width">
-                  <label for="nombre">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Nombre y Apellido
-                  </label>
-                  <input type="text" id="nombre" placeholder="Nombre completo del cliente" required>
-                  <span class="field-error" id="err-nombre"></span>
-                </div>
-
-                <div class="field-group">
-                  <label for="telefono">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.07-1.07a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    Número de Teléfono
-                  </label>
-                  <input type="tel" id="telefono" placeholder="9 dígitos" maxlength="9" inputmode="numeric" required>
-                  <span class="field-error" id="err-telefono"></span>
-                </div>
-
-                <div class="field-group">
-                  <label for="edad">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    Edad
-                  </label>
-                  <input type="tel" id="edad" placeholder="Años" maxlength="3" inputmode="numeric" required>
-                  <span class="field-error" id="err-edad"></span>
-                </div>
-
-                <!-- Pregunta 1: Plan de salud -->
-                <div class="field-group full-width">
-                  <label class="label-inline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    ¿Actualmente cuentas con algún plan de salud?
-                  </label>
-                  <div class="yesno-grid" id="opts-plan">
-                    <button type="button" class="yesno-card" onclick="selectYesNo('plan', 'Sí', this)">
-                      <span class="yesno-emoji">✅</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">Sí</span>
-                    </button>
-                    <button type="button" class="yesno-card" onclick="selectYesNo('plan', 'No', this)">
-                      <span class="yesno-emoji">❌</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">No</span>
-                    </button>
-                  </div>
-                  <span class="field-error" id="err-plan"></span>
-                </div>
-
-                <!-- Pregunta 2: Seguro oncológico -->
-                <div class="field-group full-width">
-                  <label class="label-inline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    ¿Actualmente cuentas con algún seguro oncológico?
-                  </label>
-                  <div class="yesno-grid" id="opts-onco">
-                    <button type="button" class="yesno-card" onclick="selectYesNo('onco', 'Sí', this)">
-                      <span class="yesno-emoji">✅</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">Sí</span>
-                    </button>
-                    <button type="button" class="yesno-card" onclick="selectYesNo('onco', 'No', this)">
-                      <span class="yesno-emoji">❌</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">No</span>
-                    </button>
-                  </div>
-                  <span class="field-error" id="err-onco"></span>
-                </div>
-
-                <div class="field-group full-width">
-                  <label for="comentarios">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    Comentarios <span class="optional-tag">Opcional</span>
-                  </label>
-                  <textarea id="comentarios" rows="3" placeholder="Observaciones adicionales..."></textarea>
-                </div>
-
-              </div><!-- /form-grid -->
-
-              <div class="form-actions">
-                <button type="submit" class="btn-primary btn-submit" id="submit-btn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                  <span class="btn-text">Registrar Lead</span>
-                  <span class="btn-loader" style="display:none"><span class="spinner"></span> Guardando...</span>
-                </button>
-              </div>
-
-            </form>
-          </div>
-
-          <!-- Success toast -->
-          <div id="toast" class="toast" style="display:none">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            ¡Lead registrado con éxito!
-          </div>
-        </div>
-
-        <!-- ── Tab: Registros ── -->
-        <div id="panel-records" class="tab-panel">
-          <div class="records-card">
-            <div class="records-header">
-              <div>
-                <h2 class="records-title">Mis Registros</h2>
-                <p class="records-sub" id="records-sub">Historial de leads registrados</p>
-              </div>
-              <div class="records-actions">
-                <button class="btn-export" onclick="exportarExcel()" title="Exportar a Excel">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                  Exportar
-                </button>
-                <button class="btn-refresh" onclick="verRegistros()" title="Actualizar">
-                  <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
-                  Actualizar
-                </button>
-              </div>
-            </div>
-
-            <!-- Filtros rápidos -->
-            <div class="quick-filters">
-              <button class="qf-btn active" id="qf-todos"   onclick="setQuickFilter('todos')">Todos</button>
-              <button class="qf-btn"        id="qf-hoy"     onclick="setQuickFilter('hoy')">Hoy</button>
-              <button class="qf-btn"        id="qf-semana"  onclick="setQuickFilter('semana')">Esta semana</button>
-              <button class="qf-btn"        id="qf-mes"     onclick="setQuickFilter('mes')">Este mes</button>
-              <button class="qf-btn"        id="qf-rango"   onclick="toggleRangoPersonalizado()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Rango
-              </button>
-            </div>
-
-            <!-- Rango personalizado (oculto por defecto) -->
-            <div class="rango-wrap" id="rango-wrap" style="display:none">
-              <div class="date-filter-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <input type="date" id="fecha-desde" title="Desde" onchange="aplicarFiltros()">
-                <span class="date-sep">→</span>
-                <input type="date" id="fecha-hasta" title="Hasta" onchange="aplicarFiltros()">
-                <button class="btn-clear-dates" onclick="limpiarFechas()" title="Limpiar fechas">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
-            </div>
-
-            <!-- Búsqueda -->
-            <div class="search-bar-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-              <input type="text" id="search-input" placeholder="Buscar por nombre, producto, teléfono..." oninput="aplicarFiltros()">
-            </div>
-
-            <div id="tabla-registros">
-              <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-                <p>Haz clic en <strong>Actualizar</strong> para cargar tus registros.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── Tab: Encuesta ── -->
-        <div id="panel-encuesta" class="tab-panel">
-          <div class="encuesta-card">
-
-            <div class="encuesta-header">
-              <div class="encuesta-header-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-              </div>
-              <div>
-                <h2 class="encuesta-title">Tu Encuesta Personalizada</h2>
-                <p class="encuesta-sub">Comparte este QR o enlace con tus prospectos para que llenen sus datos</p>
-              </div>
-            </div>
-
-            <div class="encuesta-body">
-
-              <!-- Link section -->
-              <div class="link-section">
-                <label class="link-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  Enlace único de encuesta
-                </label>
-                <div class="link-box">
-                  <span id="encuesta-link-text" class="link-text">Cargando...</span>
-                  <button class="btn-copy" id="btn-copy" onclick="copiarLink()" title="Copiar enlace">
-                    <svg id="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- QR section -->
-              <div class="qr-section">
-                <label class="link-label">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V5a2 2 0 0 1 2-2h4"/><path d="M15 3h4a2 2 0 0 1 2 2v4"/><path d="M21 15v4a2 2 0 0 1-2 2h-4"/><path d="M9 21H5a2 2 0 0 1-2-2v-4"/></svg>
-                  Código QR — escanear con el celular
-                </label>
-                <div class="qr-wrapper">
-                  <div id="qr-container" class="qr-container">
-                    <div class="qr-loading">
-                      <div class="loading-dots"><span></span><span></span><span></span></div>
-                      <p>Generando QR...</p>
-                    </div>
-                  </div>
-                </div>
-                <button class="btn-download-qr" onclick="descargarQR()">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  Descargar QR
-                </button>
-              </div>
-
-              <!-- Instrucciones -->
-              <div class="instrucciones">
-                <div class="instruccion-item">
-                  <div class="instruccion-num">1</div>
-                  <p>Muestra el QR a tu prospecto para que lo escanee con su celular</p>
-                </div>
-                <div class="instruccion-item">
-                  <div class="instruccion-num">2</div>
-                  <p>El prospecto llena el formulario con sus datos</p>
-                </div>
-                <div class="instruccion-item">
-                  <div class="instruccion-num">3</div>
-                  <p>Los datos se guardan automáticamente en tus registros</p>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /content-wrapper -->
-    </main>
-  </section>
-
-  <!-- ═══════════════════ EXPORT MODAL ═══════════════════ -->
-  <div id="export-modal-overlay" class="modal-overlay" style="display:none" onclick="closeExportModal(event)">
-    <div class="modal-card export-modal-card" role="dialog" aria-modal="true">
-
-      <div class="modal-header export-modal-header">
-        <div class="modal-header-left">
-          <div class="modal-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          </div>
-          <div>
-            <h3>Exportar a Excel</h3>
-            <p class="modal-subtitle">Selecciona el período y descarga tu archivo .xlsx</p>
-          </div>
-        </div>
-        <button class="modal-close" onclick="closeExportModal()" aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+      <!-- Nombre -->
+      <div class="field-group">
+        <label class="field-label" for="s-nombre">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Nombre y Apellido
+        </label>
+        <input type="text" id="s-nombre" placeholder="Ej: María García López" autocomplete="name">
+        <span class="field-error" id="err-s-nombre"></span>
       </div>
 
-      <div class="modal-body export-body">
-
-        <!-- Período -->
-        <p class="export-section-label">Período de exportación</p>
-        <div class="export-period-grid">
-          <button class="export-period-btn active" id="ep-todos"  onclick="selectExportPeriod('todos', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18M3 15h18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-            Todos los leads
-          </button>
-          <button class="export-period-btn" id="ep-hoy"   onclick="selectExportPeriod('hoy', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Hoy
-          </button>
-          <button class="export-period-btn" id="ep-semana" onclick="selectExportPeriod('semana', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            Esta semana
-          </button>
-          <button class="export-period-btn" id="ep-mes"   onclick="selectExportPeriod('mes', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="14" width="3" height="3"/></svg>
-            Este mes
-          </button>
-          <button class="export-period-btn" id="ep-rango" onclick="selectExportPeriod('rango', this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-            Rango personalizado
-          </button>
-        </div>
-
-        <!-- Rango personalizado -->
-        <div id="export-rango-wrap" style="display:none" class="export-rango">
-          <div class="date-filter-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <input type="date" id="exp-desde" onchange="actualizarPreview()">
-            <span class="date-sep">→</span>
-            <input type="date" id="exp-hasta" onchange="actualizarPreview()">
-          </div>
-        </div>
-
-        <!-- Preview -->
-        <div class="export-preview">
-          <div class="export-preview-stat">
-            <span class="preview-num" id="preview-count">—</span>
-            <span class="preview-label">leads a exportar</span>
-          </div>
-          <div class="export-preview-stat">
-            <span class="preview-num" id="preview-period">—</span>
-            <span class="preview-label">período</span>
-          </div>
-        </div>
-
-        <!-- Nombre del archivo -->
-        <p class="export-section-label" style="margin-top:1rem">Nombre del archivo</p>
-        <div class="input-wrap" style="margin-bottom:0">
-          <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          <input type="text" id="export-filename" placeholder="Mis_Leads" style="padding-left:44px">
-        </div>
-        <span style="font-size:0.75rem;color:var(--slate-400);margin-top:4px;display:block">Se descargará como <strong id="filename-preview">Mis_Leads.xlsx</strong></span>
-
+      <!-- Teléfono -->
+      <div class="field-group">
+        <label class="field-label" for="s-telefono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.07-1.07a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Número de Teléfono
+        </label>
+        <input type="tel" id="s-telefono" placeholder="Ej: 987654321" maxlength="9" inputmode="numeric" autocomplete="tel">
+        <span class="field-hint">Ingresa tu número de 9 dígitos</span>
+        <span class="field-error" id="err-s-telefono"></span>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeExportModal()">Cancelar</button>
-        <button class="btn-primary btn-save" id="btn-do-export" onclick="ejecutarExportacion()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Descargar Excel
-        </button>
+      <!-- Edad -->
+      <div class="field-group">
+        <label class="field-label" for="s-edad">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Edad
+        </label>
+        <input type="tel" id="s-edad" placeholder="Ej: 35" maxlength="3" inputmode="numeric">
+        <span class="field-error" id="err-s-edad"></span>
       </div>
+
+      <div class="form-divider"></div>
+
+      <!-- Plan de salud -->
+      <div class="field-group">
+        <label class="field-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          ¿Actualmente cuentas con algún plan de salud?
+        </label>
+        <div class="options-grid" id="opts-plan">
+          <button class="option-card" type="button" onclick="selectOpcion('plan', 'Sí', this)">
+            <span class="option-emoji">✅</span>
+            <div class="option-radio"><div class="option-radio-dot"></div></div>
+            <span class="option-text">Sí, cuento con uno</span>
+          </button>
+          <button class="option-card" type="button" onclick="selectOpcion('plan', 'No', this)">
+            <span class="option-emoji">❌</span>
+            <div class="option-radio"><div class="option-radio-dot"></div></div>
+            <span class="option-text">No, aún no tengo</span>
+          </button>
+        </div>
+        <span class="field-error" id="err-plan"></span>
+      </div>
+
+      <!-- Seguro oncológico -->
+      <div class="field-group">
+        <label class="field-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          ¿Actualmente cuentas con algún seguro oncológico?
+        </label>
+        <div class="options-grid" id="opts-seguro">
+          <button class="option-card" type="button" onclick="selectOpcion('seguro', 'Sí', this)">
+            <span class="option-emoji">✅</span>
+            <div class="option-radio"><div class="option-radio-dot"></div></div>
+            <span class="option-text">Sí, cuento con uno</span>
+          </button>
+          <button class="option-card" type="button" onclick="selectOpcion('seguro', 'No', this)">
+            <span class="option-emoji">❌</span>
+            <div class="option-radio"><div class="option-radio-dot"></div></div>
+            <span class="option-text">No, aún no tengo</span>
+          </button>
+        </div>
+        <span class="field-error" id="err-seguro"></span>
+      </div>
+
+      <!-- SUBMIT -->
+      <button class="btn-submit" id="btn-submit" type="button" onclick="enviarEncuesta()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        ¡Quiero mi asesoría gratuita!
+      </button>
+
+      <p class="submit-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Tus datos están seguros y no serán compartidos con terceros
+      </p>
 
     </div>
   </div>
 
-  <!-- ═══════════════════ EDIT MODAL ═══════════════════ -->
-  <div id="edit-modal-overlay" class="modal-overlay" style="display:none" onclick="closeEditModal(event)">
-    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-
-      <!-- Header -->
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <div class="modal-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </div>
-          <div>
-            <h3 id="modal-title">Editar Lead</h3>
-            <p class="modal-subtitle" id="modal-fecha-display">—</p>
-          </div>
-        </div>
-        <button class="modal-close" onclick="closeEditModal()" aria-label="Cerrar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      <!-- Body -->
-      <div class="modal-body">
-        <input type="hidden" id="edit-row-index">
-
-        <div class="form-grid">
-          <div class="field-group full-width">
-            <label for="edit-nombre">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Nombre y Apellido
-            </label>
-            <input type="text" id="edit-nombre" placeholder="Nombre completo del cliente">
-            <span class="field-error" id="edit-err-nombre"></span>
-          </div>
-
-          <div class="field-group">
-            <label for="edit-telefono">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.62 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.07-1.07a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              Número de Teléfono
-            </label>
-            <input type="tel" id="edit-telefono" placeholder="Ej: 987654321" maxlength="9" inputmode="numeric">
-            <span class="field-error" id="edit-err-telefono"></span>
-          </div>
-
-          <div class="field-group">
-            <label for="edit-edad">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Edad
-            </label>
-            <input type="tel" id="edit-edad" placeholder="Ej: 45" maxlength="3" inputmode="numeric">
-            <span class="field-error" id="edit-err-edad"></span>
-          </div>
-
-          <div class="field-group full-width">
-            <label for="edit-producto">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-              Producto de Interés
-            </label>
-            <div class="select-wrap">
-              <select id="edit-producto">
-                <option value="" disabled>Selecciona un producto</option>
-                <option value="Auna Classic">🔵 Auna Classic</option>
-                <option value="Auna Premium">🟣 Auna Premium</option>
-                <option value="Auna Senior">🟢 Auna Senior</option>
-                <option value="Onco Pro">🟠 Onco Pro</option>
-                <option value="Onco Plus">🔴 Onco Plus</option>
-              </select>
-              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-            <span class="field-error" id="edit-err-producto"></span>
-          </div>
-
-          <div class="field-group full-width">
-            <label for="edit-comentarios">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Comentarios <span class="optional-tag">Opcional</span>
-            </label>
-            <textarea id="edit-comentarios" rows="3" placeholder="Observaciones adicionales..."></textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeEditModal()">Cancelar</button>
-        <button class="btn-primary btn-save" id="btn-save-edit" onclick="guardarEdicion()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-          <span class="btn-text">Guardar Cambios</span>
-          <span class="btn-loader" style="display:none"><span class="spinner"></span> Guardando...</span>
-        </button>
-      </div>
-
+  <!-- SUCCESS -->
+  <div id="screen-success">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <h2>¡Registro exitoso!</h2>
+    <p class="success-lead">Ya estás participando de la promoción exclusiva Auna.</p>
+    <p>Un especialista se comunicará contigo para brindarte tu <strong>asesoría gratuita de salud</strong> y presentarte las mejores opciones de cobertura para ti y tu familia.</p>
+    <div class="success-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      ¡Beneficio activado con éxito!
     </div>
   </div>
 
-  <!-- Toast de edición guardada -->
-  <div id="toast-edit" class="toast toast-edit" style="display:none">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    ¡Lead actualizado con éxito!
+  <div class="survey-footer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    © Auna — Tu información está protegida
   </div>
 
-  <script src="script.js"></script>
+</div>
+
+<script>
+  const URL_GS = "https://script.google.com/macros/s/AKfycbzg3p6evPFrvfWIAwa6MoGMEtuoyBLU2-wWapn-Ic4lYY9fzuVzrT-zAaOg18XoxvKBaA/exec";
+  const USUARIO = decodeURIComponent(new URLSearchParams(window.location.search).get("u") || "encuesta");
+
+  let planSeleccionado   = null;
+  let seguroSeleccionado = null;
+
+  // Solo dígitos
+  function soloDigitos(id, max) {
+    const el = document.getElementById(id);
+    el.addEventListener("input",   () => { el.value = el.value.replace(/\D/g, "").slice(0, max); });
+    el.addEventListener("keydown", (e) => {
+      if (!["Backspace","Delete","ArrowLeft","ArrowRight","Tab","Home","End"].includes(e.key) && !/^\d$/.test(e.key))
+        e.preventDefault();
+    });
+  }
+  soloDigitos("s-telefono", 9);
+  soloDigitos("s-edad", 3);
+
+  // Limpiar errores al escribir
+  ["s-nombre","s-telefono","s-edad"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => {
+      document.getElementById(id).classList.remove("invalid");
+      document.getElementById("err-" + id).textContent = "";
+    });
+  });
+
+  // Seleccionar opción
+  function selectOpcion(campo, valor, btn) {
+    const grupoId = campo === "plan" ? "opts-plan" : "opts-seguro";
+    document.querySelectorAll("#" + grupoId + " .option-card").forEach(c => c.classList.remove("selected"));
+    btn.classList.add("selected");
+    if (campo === "plan")   planSeleccionado   = valor;
+    if (campo === "seguro") seguroSeleccionado = valor;
+    document.getElementById("err-" + campo).textContent = "";
+  }
+
+  // Validación
+  function validar() {
+    let ok = true;
+
+    const nombre = document.getElementById("s-nombre").value.trim();
+    if (nombre.length < 3) {
+      document.getElementById("s-nombre").classList.add("invalid");
+      document.getElementById("err-s-nombre").textContent = "Ingresa tu nombre completo";
+      ok = false;
+    }
+
+    const tel = document.getElementById("s-telefono").value;
+    if (!/^\d{9}$/.test(tel)) {
+      document.getElementById("s-telefono").classList.add("invalid");
+      document.getElementById("err-s-telefono").textContent = "El teléfono debe tener exactamente 9 dígitos";
+      ok = false;
+    }
+
+    const edad = parseInt(document.getElementById("s-edad").value, 10);
+    if (!edad || edad < 1 || edad > 120) {
+      document.getElementById("s-edad").classList.add("invalid");
+      document.getElementById("err-s-edad").textContent = "Ingresa una edad válida (1–120)";
+      ok = false;
+    }
+
+    if (!planSeleccionado) {
+      document.getElementById("err-plan").textContent = "Por favor selecciona una opción";
+      ok = false;
+    }
+
+    if (!seguroSeleccionado) {
+      document.getElementById("err-seguro").textContent = "Por favor selecciona una opción";
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  // Fecha Lima
+  function fechaLima() {
+    const now   = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Lima",
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "numeric", minute: "2-digit", hour12: true,
+    }).formatToParts(now);
+    const get = t => parts.find(p => p.type === t)?.value ?? "";
+    return `${get("month")}/${get("day")}/${get("year")} ${get("hour")}:${get("minute")} ${get("dayPeriod").toLowerCase()}`;
+  }
+
+  // Enviar
+  async function enviarEncuesta() {
+    if (!validar()) {
+      const firstErr = document.querySelector(".invalid");
+      if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+
+    const btn = document.getElementById("btn-submit");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Enviando...`;
+
+    const datos = {
+      action:      "saveEncuesta",
+      usuario:     USUARIO,
+      fecha:       fechaLima(),
+      nombre:      document.getElementById("s-nombre").value.trim(),
+      telefono:    parseInt(document.getElementById("s-telefono").value, 10),
+      edad:        parseInt(document.getElementById("s-edad").value, 10),
+      producto:    "",
+      comentarios: `Plan de salud: ${planSeleccionado}. Seguro oncológico: ${seguroSeleccionado}.`,
+    };
+
+    try {
+      await fetch(URL_GS, {
+        method: "POST",
+        mode:   "no-cors",
+        body:   JSON.stringify(datos),
+      });
+
+      document.getElementById("survey-body").style.display   = "none";
+      document.getElementById("screen-success").style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> ¡Quiero mi asesoría gratuita!`;
+      alert("Hubo un error al enviar. Por favor intenta de nuevo.");
+    }
+  }
+</script>
 </body>
 </html>
+

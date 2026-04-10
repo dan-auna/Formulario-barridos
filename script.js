@@ -96,8 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Enter") document.getElementById("password").focus();
   });
 
-  // Product select preview
-  document.getElementById("producto").addEventListener("change", updateProductChip);
+  // Product select preview — removed (product field no longer exists)
 
   // ── Restricciones en inputs numéricos ──
   // Teléfono: solo dígitos, máximo 9
@@ -178,19 +177,16 @@ function switchTab(tab) {
 }
 
 /* ══════════════════════════════════════════════
-   PRODUCT CHIP PREVIEW
+   YES/NO SELECTOR (plan de salud y seguro onco)
 ══════════════════════════════════════════════ */
-function updateProductChip() {
-  const val     = document.getElementById("producto").value;
-  const preview = document.getElementById("product-preview");
-  const chip    = document.getElementById("product-chip-display");
+const yesNoState = { plan: null, onco: null };
 
-  if (val) {
-    preview.style.display = "block";
-    chip.textContent = `✔ ${val} seleccionado`;
-  } else {
-    preview.style.display = "none";
-  }
+function selectYesNo(campo, valor, btn) {
+  const groupId = campo === "plan" ? "opts-plan" : "opts-onco";
+  document.querySelectorAll(`#${groupId} .yesno-card`).forEach(c => c.classList.remove("selected"));
+  btn.classList.add("selected");
+  yesNoState[campo] = valor;
+  document.getElementById(`err-${campo}`).textContent = "";
 }
 
 /* ══════════════════════════════════════════════
@@ -200,18 +196,15 @@ function validateForm() {
   let valid = true;
 
   const fields = [
-    { id: "nombre",    errId: "err-nombre",   msg: "Ingresa el nombre completo",   check: (v) => v.trim().length >= 3 },
-    { id: "telefono",  errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
-    { id: "edad",      errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
-    { id: "producto",  errId: "err-producto", msg: "Selecciona un producto",       check: (v) => v !== "" },
+    { id: "nombre",   errId: "err-nombre",   msg: "Ingresa el nombre completo",                    check: (v) => v.trim().length >= 3 },
+    { id: "telefono", errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos",  check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
+    { id: "edad",     errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",                check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
   ];
 
   fields.forEach(({ id, errId, msg, check }) => {
     const el  = document.getElementById(id);
     const err = document.getElementById(errId);
-    const val = el.value;
-
-    if (!check(val)) {
+    if (!check(el.value)) {
       el.classList.add("invalid");
       err.textContent = msg;
       valid = false;
@@ -221,11 +214,21 @@ function validateForm() {
     }
   });
 
+  if (!yesNoState.plan) {
+    document.getElementById("err-plan").textContent = "Por favor selecciona una opción";
+    valid = false;
+  }
+
+  if (!yesNoState.onco) {
+    document.getElementById("err-onco").textContent = "Por favor selecciona una opción";
+    valid = false;
+  }
+
   return valid;
 }
 
 // Remove invalid class on input
-["nombre", "telefono", "edad", "producto"].forEach((id) => {
+["nombre", "telefono", "edad"].forEach((id) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input",  () => { el.classList.remove("invalid"); document.getElementById(`err-${id}`)?.textContent && (document.getElementById(`err-${id}`).textContent = ""); });
@@ -263,8 +266,13 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     nombre:      document.getElementById("nombre").value.trim(),
     telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
     edad:        parseInt(document.getElementById("edad").value, 10),
-    producto:    document.getElementById("producto").value,
-    comentarios: document.getElementById("comentarios").value.trim(),
+    producto:    "",
+    comentarios: (() => {
+                   const planResp = yesNoState.plan ? `Plan de salud: ${yesNoState.plan}.` : "";
+                   const oncoResp = yesNoState.onco ? `Seguro oncológico: ${yesNoState.onco}.` : "";
+                   const extra    = document.getElementById("comentarios").value.trim();
+                   return [planResp, oncoResp, extra].filter(Boolean).join(" ");
+                 })(),
   };
 
   try {
@@ -275,11 +283,14 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     });
 
     this.reset();
-    document.getElementById("product-preview").style.display = "none";
+    // Reset yes/no buttons
+    yesNoState.plan = null;
+    yesNoState.onco = null;
+    document.querySelectorAll(".yesno-card").forEach(c => c.classList.remove("selected"));
     showToast();
 
     // Clear validation states
-    ["nombre", "telefono", "edad", "producto"].forEach((id) => {
+    ["nombre", "telefono", "edad"].forEach((id) => {
       document.getElementById(id)?.classList.remove("invalid");
     });
 
@@ -387,19 +398,282 @@ async function verRegistros() {
 }
 
 /* ══════════════════════════════════════════════
-   FILTRAR TABLA
+   FILTROS RÁPIDOS
 ══════════════════════════════════════════════ */
-function filtrarTabla() {
-  const q = document.getElementById("search-input").value.toLowerCase();
-  const filtrados = allLeads.filter(
-    (l) =>
-      (l.nombre    || "").toLowerCase().includes(q) ||
-      (l.producto  || "").toLowerCase().includes(q) ||
-      (l.telefono  || "").toString().includes(q)     ||
-      (l.agente    || l.usuario || "").toLowerCase().includes(q)
-  );
+let activeQuickFilter = "todos";
+
+function setQuickFilter(tipo) {
+  activeQuickFilter = tipo;
+
+  // Actualizar botones activos
+  ["todos","hoy","semana","mes","rango"].forEach(t => {
+    const btn = document.getElementById("qf-" + t);
+    if (btn) btn.classList.toggle("active", t === tipo);
+  });
+
+  // Mostrar/ocultar rango personalizado
+  const rangoWrap = document.getElementById("rango-wrap");
+  if (rangoWrap) rangoWrap.style.display = tipo === "rango" ? "block" : "none";
+
+  // Limpiar fechas si no es rango
+  if (tipo !== "rango") {
+    const d = document.getElementById("fecha-desde");
+    const h = document.getElementById("fecha-hasta");
+    if (d) d.value = "";
+    if (h) h.value = "";
+  }
+
+  aplicarFiltros();
+}
+
+function toggleRangoPersonalizado() {
+  const esRango = activeQuickFilter === "rango";
+  setQuickFilter(esRango ? "todos" : "rango");
+}
+
+/* ══════════════════════════════════════════════
+   FILTROS: BÚSQUEDA + FECHA
+══════════════════════════════════════════════ */
+function aplicarFiltros() {
+  const q     = document.getElementById("search-input")?.value.toLowerCase() || "";
+  const desde = document.getElementById("fecha-desde")?.value || "";
+  const hasta = document.getElementById("fecha-hasta")?.value || "";
+
+  const filtrados = allLeads.filter((l) => {
+    // Filtro texto
+    const textoOk =
+      !q ||
+      (l.nombre   || "").toLowerCase().includes(q) ||
+      (l.producto || "").toLowerCase().includes(q) ||
+      (l.telefono || "").toString().includes(q)    ||
+      (l.agente   || l.usuario || "").toLowerCase().includes(q);
+
+    // Filtro por período rápido o rango
+    let fechaOk = true;
+    const fechaLead = parseFechaParaFiltro(l.fecha);
+
+    if (activeQuickFilter === "hoy") {
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      const fin = new Date(); fin.setHours(23,59,59,999);
+      fechaOk = fechaLead ? fechaLead >= hoy && fechaLead <= fin : false;
+
+    } else if (activeQuickFilter === "semana") {
+      const hoy  = new Date();
+      const lunes = new Date(hoy);
+      lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+      lunes.setHours(0,0,0,0);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      domingo.setHours(23,59,59,999);
+      fechaOk = fechaLead ? fechaLead >= lunes && fechaLead <= domingo : false;
+
+    } else if (activeQuickFilter === "mes") {
+      const hoy    = new Date();
+      const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
+      const fin    = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
+      fechaOk = fechaLead ? fechaLead >= inicio && fechaLead <= fin : false;
+
+    } else if (activeQuickFilter === "rango" && (desde || hasta)) {
+      if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T00:00:00");
+      if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T23:59:59");
+      if (!fechaLead) fechaOk = false;
+    }
+
+    return textoOk && fechaOk;
+  });
+
   currentPage = 1;
   renderTable(filtrados, document.getElementById("tabla-registros"));
+}
+
+// Parsear fecha del lead para comparación
+function parseFechaParaFiltro(valor) {
+  if (!valor) return null;
+  const d = new Date(valor);
+  if (!isNaN(d.getTime())) return d;
+  // Intento manual: "04/08/2026 2:12 pm"
+  const m = String(valor).match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d+):(\d{2})\s*(am|pm)/i);
+  if (m) {
+    let h = parseInt(m[4], 10);
+    if (m[6].toLowerCase() === "pm" && h !== 12) h += 12;
+    if (m[6].toLowerCase() === "am" && h === 12) h = 0;
+    return new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]), h, parseInt(m[5]));
+  }
+  return null;
+}
+
+function limpiarFechas() {
+  document.getElementById("fecha-desde").value = "";
+  document.getElementById("fecha-hasta").value = "";
+  aplicarFiltros();
+}
+
+function filtrarTabla() { aplicarFiltros(); }
+
+/* ══════════════════════════════════════════════
+   MODAL DE EXPORTACIÓN
+══════════════════════════════════════════════ */
+let exportPeriod = "todos";
+
+function exportarExcel() {
+  const overlay = document.getElementById("export-modal-overlay");
+  overlay.style.display = "flex";
+  overlay.offsetHeight;
+  overlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  // Sincronizar período activo con la vista actual
+  exportPeriod = activeQuickFilter;
+  document.querySelectorAll(".export-period-btn").forEach(b => b.classList.remove("active"));
+  const syncBtn = document.getElementById("ep-" + exportPeriod);
+  if (syncBtn) syncBtn.classList.add("active");
+
+  // Nombre de archivo por defecto
+  const usuario = sessionStorage.getItem("agenteActivo") || sessionStorage.getItem("usuarioActivo") || "Leads";
+  document.getElementById("export-filename").value = `Leads_${usuario}`;
+  actualizarPreview();
+
+  // Rango personalizado
+  document.getElementById("export-rango-wrap").style.display = exportPeriod === "rango" ? "flex" : "none";
+
+  // Preview filename on input
+  document.getElementById("export-filename").oninput = () => {
+    const val = document.getElementById("export-filename").value.trim() || "Mis_Leads";
+    document.getElementById("filename-preview").textContent = val + ".xlsx";
+  };
+  document.getElementById("filename-preview").textContent =
+    (document.getElementById("export-filename").value.trim() || "Mis_Leads") + ".xlsx";
+}
+
+function closeExportModal(event) {
+  if (event && event.target !== document.getElementById("export-modal-overlay")) return;
+  const overlay = document.getElementById("export-modal-overlay");
+  overlay.classList.remove("active");
+  setTimeout(() => { overlay.style.display = "none"; document.body.style.overflow = ""; }, 250);
+}
+
+function selectExportPeriod(period, btn) {
+  exportPeriod = period;
+  document.querySelectorAll(".export-period-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("export-rango-wrap").style.display = period === "rango" ? "flex" : "none";
+  actualizarPreview();
+}
+
+function getLeadsFiltradosParaExportar() {
+  const desde = document.getElementById("exp-desde")?.value || "";
+  const hasta = document.getElementById("exp-hasta")?.value || "";
+  const hoy   = new Date();
+
+  return allLeads.filter((l) => {
+    const fechaLead = parseFechaParaFiltro(l.fecha);
+
+    if (exportPeriod === "hoy") {
+      const ini = new Date(hoy); ini.setHours(0,0,0,0);
+      const fin = new Date(hoy); fin.setHours(23,59,59,999);
+      return fechaLead ? fechaLead >= ini && fechaLead <= fin : false;
+    }
+    if (exportPeriod === "semana") {
+      const lunes = new Date(hoy);
+      lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+      lunes.setHours(0,0,0,0);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      domingo.setHours(23,59,59,999);
+      return fechaLead ? fechaLead >= lunes && fechaLead <= domingo : false;
+    }
+    if (exportPeriod === "mes") {
+      const ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
+      const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
+      return fechaLead ? fechaLead >= ini && fechaLead <= fin : false;
+    }
+    if (exportPeriod === "rango") {
+      let ok = true;
+      if (desde && fechaLead) ok = ok && fechaLead >= new Date(desde + "T00:00:00");
+      if (hasta && fechaLead) ok = ok && fechaLead <= new Date(hasta + "T23:59:59");
+      if (!fechaLead && (desde || hasta)) ok = false;
+      return ok;
+    }
+    return true; // "todos"
+  });
+}
+
+function actualizarPreview() {
+  const datos  = getLeadsFiltradosParaExportar();
+  const labels = { todos: "Todos los registros", hoy: "Hoy", semana: "Esta semana", mes: "Este mes", rango: "Rango personalizado" };
+  document.getElementById("preview-count").textContent  = datos.length;
+  document.getElementById("preview-period").textContent = labels[exportPeriod] || "—";
+}
+
+function ejecutarExportacion() {
+  const datos = getLeadsFiltradosParaExportar();
+
+  if (datos.length === 0) {
+    alert("No hay leads en el período seleccionado para exportar.");
+    return;
+  }
+
+  const rol           = sessionStorage.getItem("rolActivo");
+  const mostrarAsesor = rol === "Administrador";
+  const usuario       = sessionStorage.getItem("agenteActivo") || sessionStorage.getItem("usuarioActivo") || "";
+  const filename      = (document.getElementById("export-filename").value.trim() || "Mis_Leads") + ".xlsx";
+
+  // Construir filas
+  const headers = ["Fecha", "Nombre", "Teléfono", "Edad", "Producto", ...(mostrarAsesor ? ["Asesor"] : []), "Comentarios"];
+
+  const filas = datos.map(d => {
+    const row = {
+      "Fecha":       formatFecha(d.fecha),
+      "Nombre":      d.nombre || "",
+      "Teléfono":    String(d.telefono ?? d["teléfono"] ?? ""),
+      "Edad":        d.edad ?? "",
+      "Producto":    d.producto || "",
+      "Comentarios": d.comentarios || "",
+    };
+    if (mostrarAsesor) row["Asesor"] = d.agente || d.usuario || "";
+    // Reordenar para que Asesor quede antes de Comentarios
+    const ordered = {};
+    headers.forEach(h => { ordered[h] = row[h] ?? ""; });
+    return ordered;
+  });
+
+  // Crear workbook con SheetJS
+  const ws = XLSX.utils.json_to_sheet(filas, { header: headers });
+
+  // Estilos de ancho de columna
+  ws["!cols"] = [
+    { wch: 22 }, // Fecha
+    { wch: 28 }, // Nombre
+    { wch: 14 }, // Teléfono
+    { wch: 8  }, // Edad
+    { wch: 18 }, // Producto
+    ...(mostrarAsesor ? [{ wch: 16 }] : []), // Asesor
+    { wch: 40 }, // Comentarios
+  ];
+
+  const wb = XLSX.utils.book_new();
+  const sheetName = `Leads ${usuario}`.slice(0, 31); // Excel limit
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+  // Descargar
+  XLSX.writeFile(wb, filename);
+
+  // Cerrar modal con pequeño delay
+  setTimeout(() => closeExportModal(), 300);
+
+  // Toast de confirmación
+  showToastExport(datos.length);
+}
+
+function showToastExport(count) {
+  // Reutilizamos el toast de edición con texto diferente
+  const toast = document.getElementById("toast-edit");
+  toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> ${count} lead${count !== 1 ? "s" : ""} exportado${count !== 1 ? "s" : ""} correctamente`;
+  toast.style.display = "flex";
+  setTimeout(() => {
+    toast.style.display = "none";
+    toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ¡Lead actualizado con éxito!`;
+  }, 3500);
 }
 
 /* ══════════════════════════════════════════════
@@ -779,5 +1053,3 @@ function descargarQR() {
   link.href     = canvas.toDataURL("image/png");
   link.click();
 }
-
-

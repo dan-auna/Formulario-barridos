@@ -177,19 +177,6 @@ function switchTab(tab) {
 }
 
 /* ══════════════════════════════════════════════
-   YES/NO SELECTOR (plan de salud y seguro onco)
-══════════════════════════════════════════════ */
-const yesNoState = { plan: null, onco: null };
-
-function selectYesNo(campo, valor, btn) {
-  const groupId = campo === "plan" ? "opts-plan" : "opts-onco";
-  document.querySelectorAll(`#${groupId} .yesno-card`).forEach(c => c.classList.remove("selected"));
-  btn.classList.add("selected");
-  yesNoState[campo] = valor;
-  document.getElementById(`err-${campo}`).textContent = "";
-}
-
-/* ══════════════════════════════════════════════
    VALIDACIÓN
 ══════════════════════════════════════════════ */
 function validateForm() {
@@ -199,6 +186,7 @@ function validateForm() {
     { id: "nombre",   errId: "err-nombre",   msg: "Ingresa el nombre completo",                    check: (v) => v.trim().length >= 3 },
     { id: "telefono", errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos",  check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
     { id: "edad",     errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",                check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
+    { id: "producto", errId: "err-producto", msg: "Selecciona un producto",                        check: (v) => v !== "" },
   ];
 
   fields.forEach(({ id, errId, msg, check }) => {
@@ -214,21 +202,11 @@ function validateForm() {
     }
   });
 
-  if (!yesNoState.plan) {
-    document.getElementById("err-plan").textContent = "Por favor selecciona una opción";
-    valid = false;
-  }
-
-  if (!yesNoState.onco) {
-    document.getElementById("err-onco").textContent = "Por favor selecciona una opción";
-    valid = false;
-  }
-
   return valid;
 }
 
 // Remove invalid class on input
-["nombre", "telefono", "edad"].forEach((id) => {
+["nombre", "telefono", "edad", "producto"].forEach((id) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input",  () => { el.classList.remove("invalid"); document.getElementById(`err-${id}`)?.textContent && (document.getElementById(`err-${id}`).textContent = ""); });
@@ -266,13 +244,8 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     nombre:      document.getElementById("nombre").value.trim(),
     telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
     edad:        parseInt(document.getElementById("edad").value, 10),
-    producto:    "",
-    comentarios: (() => {
-                   const planResp = yesNoState.plan ? `Plan de salud: ${yesNoState.plan}.` : "";
-                   const oncoResp = yesNoState.onco ? `Seguro oncológico: ${yesNoState.onco}.` : "";
-                   const extra    = document.getElementById("comentarios").value.trim();
-                   return [planResp, oncoResp, extra].filter(Boolean).join(" ");
-                 })(),
+    producto:    document.getElementById("producto").value,
+    comentarios: document.getElementById("comentarios").value.trim(),
   };
 
   try {
@@ -283,14 +256,10 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     });
 
     this.reset();
-    // Reset yes/no buttons
-    yesNoState.plan = null;
-    yesNoState.onco = null;
-    document.querySelectorAll(".yesno-card").forEach(c => c.classList.remove("selected"));
     showToast();
 
     // Clear validation states
-    ["nombre", "telefono", "edad"].forEach((id) => {
+    ["nombre", "telefono", "edad", "producto"].forEach((id) => {
       document.getElementById(id)?.classList.remove("invalid");
     });
 

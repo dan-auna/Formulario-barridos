@@ -239,7 +239,7 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
                    }).formatToParts(now);
                    const get = (t) => parts.find(p => p.type === t)?.value ?? "";
                    const ampm = get("dayPeriod").toLowerCase();
-                   return `${get("month")}/${get("day")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
+                   return `${get("day")}/${get("month")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
                  })(),
     nombre:      document.getElementById("nombre").value.trim(),
     telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
@@ -664,7 +664,7 @@ function formatFecha(valor) {
   }).formatToParts(date);
   const get = (t) => parts.find(p => p.type === t)?.value ?? "";
   const ampm = get("dayPeriod").toLowerCase();
-  return `${get("month")}/${get("day")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
+  return `${get("day")}/${get("month")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
 }
 
 function getBadgeClass(producto) {

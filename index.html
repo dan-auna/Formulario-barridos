@@ -170,46 +170,23 @@
                   <span class="field-error" id="err-edad"></span>
                 </div>
 
-                <!-- Pregunta 1: Plan de salud -->
                 <div class="field-group full-width">
-                  <label class="label-inline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    ¿Actualmente cuentas con algún plan de salud?
+                  <label for="producto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Producto de Interés
                   </label>
-                  <div class="yesno-grid" id="opts-plan">
-                    <button type="button" class="yesno-card" onclick="selectYesNo('plan', 'Sí', this)">
-                      <span class="yesno-emoji">✅</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">Sí</span>
-                    </button>
-                    <button type="button" class="yesno-card" onclick="selectYesNo('plan', 'No', this)">
-                      <span class="yesno-emoji">❌</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">No</span>
-                    </button>
+                  <div class="select-wrap">
+                    <select id="producto" required>
+                      <option value="" disabled selected>Selecciona un producto</option>
+                      <option value="Auna Classic">🔵 Auna Classic</option>
+                      <option value="Auna Premium">🟣 Auna Premium</option>
+                      <option value="Auna Senior">🟢 Auna Senior</option>
+                      <option value="Onco Pro">🟠 Onco Pro</option>
+                      <option value="Onco Plus">🔴 Onco Plus</option>
+                    </select>
+                    <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
-                  <span class="field-error" id="err-plan"></span>
-                </div>
-
-                <!-- Pregunta 2: Seguro oncológico -->
-                <div class="field-group full-width">
-                  <label class="label-inline">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    ¿Actualmente cuentas con algún seguro oncológico?
-                  </label>
-                  <div class="yesno-grid" id="opts-onco">
-                    <button type="button" class="yesno-card" onclick="selectYesNo('onco', 'Sí', this)">
-                      <span class="yesno-emoji">✅</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">Sí</span>
-                    </button>
-                    <button type="button" class="yesno-card" onclick="selectYesNo('onco', 'No', this)">
-                      <span class="yesno-emoji">❌</span>
-                      <div class="yesno-radio"><div class="yesno-dot"></div></div>
-                      <span class="yesno-text">No</span>
-                    </button>
-                  </div>
-                  <span class="field-error" id="err-onco"></span>
+                  <span class="field-error" id="err-producto"></span>
                 </div>
 
                 <div class="field-group full-width">

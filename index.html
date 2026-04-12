@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -219,6 +220,9 @@
 
         <!-- ── Tab: Registros ── -->
         <div id="panel-records" class="tab-panel">
+
+          <!-- ════ VISTA: LISTA DE LEADS ════ -->
+          <div id="vista-lista">
           <div class="records-card">
             <div class="records-header">
               <div>
@@ -226,6 +230,18 @@
                 <p class="records-sub" id="records-sub">Historial de leads registrados</p>
               </div>
               <div class="records-actions">
+                <!-- Filtro asesor (solo admin) -->
+                <div class="select-wrap admin-only" id="wrap-filtro-asesor" style="display:none">
+                  <select id="filtro-asesor" onchange="aplicarFiltros()" title="Filtrar por asesor">
+                    <option value="todos">Todos los asesores</option>
+                  </select>
+                  <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+                <!-- Botón estadísticas (solo admin) -->
+                <button class="btn-stats admin-only" id="btn-ir-stats" onclick="mostrarEstadisticas()" style="display:none" title="Ver estadísticas">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                  Estadísticas
+                </button>
                 <button class="btn-export" onclick="exportarExcel()" title="Exportar a Excel">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                   Exportar
@@ -249,7 +265,7 @@
               </button>
             </div>
 
-            <!-- Rango personalizado (oculto por defecto) -->
+            <!-- Rango personalizado -->
             <div class="rango-wrap" id="rango-wrap" style="display:none">
               <div class="date-filter-wrap">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -275,7 +291,54 @@
               </div>
             </div>
           </div>
-        </div>
+          </div><!-- /vista-lista -->
+
+          <!-- ════ VISTA: ESTADÍSTICAS (solo admin) ════ -->
+          <div id="vista-stats" style="display:none">
+
+            <!-- Header estadísticas -->
+            <div class="stats-topbar">
+              <button class="btn-back-lista" onclick="volverALista()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                Volver a registros
+              </button>
+              <h2 class="stats-topbar-title">Panel de Estadísticas</h2>
+              <!-- Selector asesor para stats -->
+              <div class="select-wrap stats-asesor-wrap">
+                <select id="stats-asesor" onchange="renderStats()">
+                  <option value="todos">Todos los asesores</option>
+                </select>
+                <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
+            <!-- Filtros de período para stats -->
+            <div class="stats-period-bar">
+              <button class="sp-btn active" id="sp-mes"    onclick="setStatsPeriod('mes',    this)">Este mes</button>
+              <button class="sp-btn"        id="sp-semana" onclick="setStatsPeriod('semana', this)">Esta semana</button>
+              <button class="sp-btn"        id="sp-hoy"    onclick="setStatsPeriod('hoy',    this)">Hoy</button>
+              <button class="sp-btn"        id="sp-rango"  onclick="setStatsPeriod('rango',  this)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                Rango
+              </button>
+            </div>
+
+            <!-- Rango stats -->
+            <div id="stats-rango-wrap" style="display:none" class="rango-wrap">
+              <div class="date-filter-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <input type="date" id="stats-desde" onchange="renderStats()">
+                <span class="date-sep">→</span>
+                <input type="date" id="stats-hasta" onchange="renderStats()">
+              </div>
+            </div>
+
+            <!-- Contenido dinámico de stats -->
+            <div id="stats-content"></div>
+
+          </div><!-- /vista-stats -->
+
+        </div><!-- /panel-records -->
 
         <!-- ── Tab: Encuesta ── -->
         <div id="panel-encuesta" class="tab-panel">

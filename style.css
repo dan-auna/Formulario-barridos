@@ -1731,3 +1731,588 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   .date-filter-wrap { padding: 0.6rem 1rem; gap: 6px; }
   .date-filter-wrap input[type="date"] { min-width: 110px; font-size: 0.78rem; }
 }
+
+/* ══════════════════════════════════════════════
+   ADMIN — BOTÓN ESTADÍSTICAS
+══════════════════════════════════════════════ */
+.btn-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+  border: none;
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin: 0;
+  width: auto;
+  box-shadow: 0 2px 8px rgba(0,95,204,0.25);
+}
+
+.btn-stats svg { width: 15px; height: 15px; }
+.btn-stats:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,95,204,0.35); }
+
+/* Admin asesor select en records-actions */
+#wrap-filtro-asesor {
+  align-items: center;
+}
+
+#wrap-filtro-asesor select {
+  padding: 8px 32px 8px 12px;
+  font-size: 0.82rem;
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  color: var(--slate-700);
+  font-weight: 500;
+  min-width: 160px;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — STATS TOPBAR
+══════════════════════════════════════════════ */
+.stats-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.btn-back-lista {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  color: var(--slate-600);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin: 0;
+  width: auto;
+  box-shadow: none;
+  flex-shrink: 0;
+}
+
+.btn-back-lista svg { width: 16px; height: 16px; }
+.btn-back-lista:hover { background: var(--slate-100); border-color: var(--slate-300); }
+
+.stats-topbar-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--blue-800);
+  flex: 1;
+}
+
+.stats-asesor-wrap {
+  min-width: 180px;
+}
+
+.stats-asesor-wrap select {
+  padding: 8px 32px 8px 12px;
+  font-size: 0.85rem;
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  color: var(--slate-700);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — STATS PERIOD BAR
+══════════════════════════════════════════════ */
+.stats-period-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.sp-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  color: var(--slate-600);
+  border-radius: var(--radius-sm);
+  padding: 7px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  margin: 0;
+  width: auto;
+  box-shadow: none;
+}
+
+.sp-btn svg { width: 13px; height: 13px; }
+.sp-btn:hover { border-color: var(--blue-300); color: var(--blue-700); background: var(--blue-50); }
+
+.sp-btn.active {
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0,45,114,0.20);
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — STATS SECTION CARD
+══════════════════════════════════════════════ */
+.stats-section-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--slate-200);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.stats-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--blue-800);
+  border-bottom: 1px solid var(--slate-100);
+  background: var(--slate-50);
+}
+
+.stats-section-header svg { width: 16px; height: 16px; color: var(--blue-500); flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════
+   ADMIN — KPI CARDS
+══════════════════════════════════════════════ */
+.stats-global { display: flex; flex-direction: column; gap: 0; }
+
+.kpi-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--slate-200);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 1.25rem;
+}
+
+.kpi-main {
+  background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 100%);
+  border: none;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  color: white;
+}
+
+.kpi-icon {
+  width: 52px; height: 52px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-icon svg { width: 26px; height: 26px; }
+
+.kpi-num {
+  font-size: 2.8rem;
+  font-weight: 800;
+  line-height: 1;
+  color: white;
+}
+
+.kpi-label {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.75);
+  margin-top: 4px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.kpi-sm {
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.kpi-sm-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--blue-800);
+  line-height: 1;
+}
+
+.kpi-sm-label {
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — TOP 3
+══════════════════════════════════════════════ */
+.top3-list {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.top3-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top3-medal { font-size: 1.6rem; flex-shrink: 0; }
+
+.top3-info { flex: 1; min-width: 0; }
+
+.top3-nombre {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--slate-800);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top3-bar-wrap {
+  height: 8px;
+  background: var(--slate-100);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.top3-bar {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.6s ease;
+}
+
+.top3-count {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--blue-700);
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — RANKING
+══════════════════════════════════════════════ */
+.ranking-table {
+  padding: 0.5rem 0;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--slate-50);
+  transition: background var(--transition);
+}
+
+.ranking-row:last-child { border-bottom: none; }
+.ranking-row:hover { background: var(--slate-50); }
+
+.ranking-pos {
+  width: 22px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--slate-400);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ranking-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ranking-nombre {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.ranking-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--slate-100);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.ranking-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--blue-600), var(--blue-400));
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.ranking-count {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--blue-700);
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — KPI ASESOR INDIVIDUAL
+══════════════════════════════════════════════ */
+.kpi-asesor-header {
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.kpi-asesor-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.kpi-asesor-nombre {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 3px;
+}
+
+.kpi-asesor-sub {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.70);
+}
+
+.kpi-asesor-badges {
+  display: flex;
+  gap: 0.75rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.kpi-badge {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1rem;
+  text-align: center;
+  min-width: 70px;
+}
+
+.kpi-badge-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+}
+
+.kpi-badge-label {
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.70);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — CALENDARIO
+══════════════════════════════════════════════ */
+.calendar-wrap {
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.cal-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.cal-header-cell {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--slate-400);
+  letter-spacing: 0.05em;
+  padding: 4px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--slate-50);
+  border: 1px solid transparent;
+  position: relative;
+  min-height: 40px;
+}
+
+.cal-cell.cal-empty { background: transparent; border-color: transparent; }
+
+.cal-cell.cal-active {
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+  border-color: var(--blue-600);
+}
+
+.cal-cell.cal-today {
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 2px rgba(245,158,11,0.25);
+}
+
+.cal-day-num {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--slate-600);
+  line-height: 1;
+}
+
+.cal-cell.cal-active .cal-day-num { color: white; }
+
+.cal-count {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: white;
+  background: rgba(255,255,255,0.30);
+  border-radius: 100px;
+  padding: 1px 5px;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.cal-legend {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--slate-500);
+  flex-wrap: wrap;
+}
+
+.cal-legend-dot {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.active-dot { background: var(--blue-500); }
+
+.cal-today-dot {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  border: 2px solid var(--amber-500);
+  margin-right: 4px;
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — GRÁFICA
+══════════════════════════════════════════════ */
+.chart-container {
+  padding: 1.25rem 1.5rem;
+  height: 240px;
+  position: relative;
+}
+
+.chart-trend {
+  padding: 0 1.5rem 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid;
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — ADMIN STATS
+══════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .stats-topbar { gap: 0.75rem; }
+  .stats-topbar-title { width: 100%; order: -1; }
+  .stats-asesor-wrap { flex: 1; }
+
+  .kpi-grid { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+  .kpi-sm-num { font-size: 1.4rem; }
+  .kpi-sm-label { font-size: 0.68rem; }
+
+  .kpi-main { padding: 1.25rem; }
+  .kpi-num { font-size: 2.2rem; }
+
+  .kpi-asesor-badges { margin-left: 0; width: 100%; }
+  .kpi-badge { flex: 1; }
+
+  .cal-cell { min-height: 32px; }
+  .cal-day-num { font-size: 0.68rem; }
+  .cal-count { font-size: 0.58rem; padding: 1px 3px; }
+
+  .chart-container { height: 200px; }
+
+  .top3-list { padding: 1rem; }
+  .ranking-row { padding: 0.65rem 1rem; }
+  .ranking-nombre { min-width: 60px; }
+
+  #wrap-filtro-asesor select { min-width: 120px; font-size: 0.78rem; }
+}

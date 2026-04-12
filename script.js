@@ -1346,7 +1346,8 @@ function renderStatsAsesor(asesor, datos, container) {
             <select class="cal-mes-select" onchange="seleccionarMesCal(this.value)">
               ${mesOpts}
             </select>
-            <button class="cal-nav-btn" onclick="cambiarMesCal(1)" title="Mes siguiente">
+            <button class="cal-nav-btn" onclick="cambiarMesCal(1)" title="Mes siguiente"
+              ${(year === hoy.getFullYear() && month === hoy.getMonth()) ? 'disabled' : ''}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
@@ -1399,14 +1400,52 @@ function cambiarMesCal(delta) {
   month += delta;
   if (month > 11) { month = 0; year++; }
   if (month < 0)  { month = 11; year--; }
+
+  // No permitir avanzar más allá del mes actual
+  const hoy = new Date();
+  if (year > hoy.getFullYear() || (year === hoy.getFullYear() && month > hoy.getMonth())) return;
+
   calMesAsesor = { year, month };
+  sincronizarPeriodoConCalendario(year, month);
   renderStats();
 }
 
 function seleccionarMesCal(value) {
   const [y, m] = value.split("-").map(Number);
   calMesAsesor = { year: y, month: m };
+  sincronizarPeriodoConCalendario(y, m);
   renderStats();
+}
+
+// Sincroniza el filtro de período con el mes del calendario
+function sincronizarPeriodoConCalendario(year, month) {
+  const hoy = new Date();
+  const esEsteMes = year === hoy.getFullYear() && month === hoy.getMonth();
+
+  if (esEsteMes) {
+    // El mes actual → activar "Este mes"
+    currentStatsPeriod = "mes";
+  } else {
+    // Otro mes → usar "rango" abarcando todo ese mes
+    currentStatsPeriod = "rango";
+    const ini = `${year}-${String(month + 1).padStart(2,"0")}-01`;
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const fin = `${year}-${String(month + 1).padStart(2,"0")}-${String(lastDay).padStart(2,"0")}`;
+    const desdeEl = document.getElementById("stats-desde");
+    const hastaEl = document.getElementById("stats-hasta");
+    if (desdeEl) desdeEl.value = ini;
+    if (hastaEl) hastaEl.value = fin;
+  }
+
+  // Actualizar botones visualmente
+  document.querySelectorAll(".sp-btn").forEach(b => b.classList.remove("active"));
+  if (esEsteMes) {
+    document.getElementById("sp-mes")?.classList.add("active");
+    document.getElementById("stats-rango-wrap").style.display = "none";
+  } else {
+    document.getElementById("sp-rango")?.classList.add("active");
+    document.getElementById("stats-rango-wrap").style.display = "block";
+  }
 }
 
 /* ── GRÁFICA ── */

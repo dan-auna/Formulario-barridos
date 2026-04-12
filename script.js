@@ -1085,6 +1085,14 @@ function setStatsPeriod(period, btn) {
   btn.classList.add("active");
   const rangoWrap = document.getElementById("stats-rango-wrap");
   rangoWrap.style.display = period === "rango" ? "block" : "none";
+
+  // Sincronizar el calendario al mes correspondiente
+  const hoy = new Date();
+  if (period === "hoy" || period === "semana" || period === "mes") {
+    // Todos estos caen en el mes actual
+    calMesAsesor = { year: hoy.getFullYear(), month: hoy.getMonth() };
+  }
+
   if (period !== "rango") renderStats();
 }
 
@@ -1275,15 +1283,31 @@ function renderStatsAsesor(asesor, datos, container) {
   const offsetInicio = (primerDia.getDay() + 6) % 7;
 
   let calCells = "";
+  // Calcular rango de "esta semana" para resaltar en el calendario
+  const lunesSemana = new Date(hoy);
+  lunesSemana.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+  lunesSemana.setHours(0,0,0,0);
+  const domingoSemana = new Date(lunesSemana);
+  domingoSemana.setDate(lunesSemana.getDate() + 6);
+  domingoSemana.setHours(23,59,59,999);
+
   for (let i = 0; i < offsetInicio; i++) calCells += `<div class="cal-cell cal-empty"></div>`;
 
   for (let d = 1; d <= ultimoDia.getDate(); d++) {
     const key        = `${String(d).padStart(2,"0")}/${String(month+1).padStart(2,"0")}/${year}`;
     const count      = porDiaTodos[key] || 0;
+    const fechaCelda = new Date(year, month, d);
     const esHoy      = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
+    const esSemana   = fechaCelda >= lunesSemana && fechaCelda <= domingoSemana && month === hoy.getMonth() && year === hoy.getFullYear();
     const tieneLeads = count > 0;
+
+    // Clases de resaltado según período activo
+    let highlightClass = "";
+    if (currentStatsPeriod === "hoy"    && esHoy)    highlightClass = "cal-highlight-hoy";
+    if (currentStatsPeriod === "semana" && esSemana) highlightClass = "cal-highlight-semana";
+
     calCells += `
-      <div class="cal-cell ${tieneLeads ? "cal-active" : ""} ${esHoy ? "cal-today" : ""}">
+      <div class="cal-cell ${tieneLeads ? "cal-active" : ""} ${esHoy ? "cal-today" : ""} ${highlightClass}">
         <span class="cal-day-num">${d}</span>
         ${tieneLeads ? `<span class="cal-count">${count}</span>` : ""}
       </div>`;
@@ -1362,6 +1386,8 @@ function renderStatsAsesor(asesor, datos, container) {
           <div class="cal-legend">
             <span class="cal-legend-dot active-dot"></span> Días con leads
             <span class="cal-today-dot"></span> Hoy
+            ${currentStatsPeriod === "semana" ? `<span class="cal-legend-dot semana-dot"></span> Esta semana` : ""}
+            ${currentStatsPeriod === "hoy"    ? `<span class="cal-legend-dot hoy-dot"></span> Hoy (filtro activo)` : ""}
           </div>
         </div>
       </div>

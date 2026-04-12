@@ -2203,6 +2203,40 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 .cal-cell.cal-empty { background: transparent; border-color: transparent; }
 
+/* Resaltado semana activa */
+.cal-cell.cal-highlight-semana {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.cal-cell.cal-highlight-semana .cal-day-num { color: var(--blue-600); font-weight: 700; }
+
+/* Combinación: tiene leads + es semana */
+.cal-cell.cal-active.cal-highlight-semana {
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 2px #bfdbfe;
+}
+
+/* Resaltado hoy (como filtro activo, más intenso que solo cal-today) */
+.cal-cell.cal-highlight-hoy {
+  background: #eff6ff;
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 2px rgba(245,158,11,0.30);
+}
+
+.cal-cell.cal-highlight-hoy .cal-day-num { color: var(--blue-800); font-weight: 800; }
+
+.cal-cell.cal-active.cal-highlight-hoy {
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.35);
+}
+
+/* Leyenda dots nuevos */
+.semana-dot { background: #bfdbfe; border: 1.5px solid #93c5fd; }
+.hoy-dot    { background: transparent; border: 2px solid var(--amber-500); }
+
 .cal-cell.cal-active {
   background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
   border-color: var(--blue-600);

@@ -1137,9 +1137,15 @@ function renderStats() {
   const datos     = getLeadsParaStats();
   const container = document.getElementById("stats-content");
 
+  // Reset calendario al mes actual al cambiar de asesor
   if (asesorSel === "todos") {
+    calMesAsesor = null;
     renderStatsGlobal(datos, container);
   } else {
+    if (!calMesAsesor) {
+      const h = new Date();
+      calMesAsesor = { year: h.getFullYear(), month: h.getMonth() };
+    }
     renderStatsAsesor(asesorSel, datos, container);
   }
 }
@@ -1154,9 +1160,8 @@ function renderStatsGlobal(datos, container) {
   });
 
   const ranking = Object.entries(porAsesor).sort((a, b) => b[1] - a[1]);
-  const top3    = ranking.slice(0, 3);
   const medals  = ["🥇","🥈","🥉"];
-  const colores  = ["#FFD700","#C0C0C0","#CD7F32"];
+  const topColors = ["#FFD700","#C0C0C0","#CD7F32"];
 
   // Calcular máximo para barras proporcionales
   const maxLeads = ranking[0]?.[1] || 1;
@@ -1193,30 +1198,7 @@ function renderStatsGlobal(datos, container) {
         </div>
       </div>
 
-      ${currentStatsPeriod === "mes" && top3.length > 0 ? `
-      <!-- Top 3 del mes -->
-      <div class="stats-section-card">
-        <div class="stats-section-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Top 3 Asesores del Mes
-        </div>
-        <div class="top3-list">
-          ${top3.map(([nombre, count], i) => `
-            <div class="top3-item">
-              <div class="top3-medal">${medals[i]}</div>
-              <div class="top3-info">
-                <div class="top3-nombre">${nombre}</div>
-                <div class="top3-bar-wrap">
-                  <div class="top3-bar" style="width:${Math.round((count/maxLeads)*100)}%; background:${colores[i]}"></div>
-                </div>
-              </div>
-              <div class="top3-count">${count} lead${count !== 1 ? "s" : ""}</div>
-            </div>
-          `).join("")}
-        </div>
-      </div>` : ""}
-
-      <!-- Ranking completo -->
+      <!-- Ranking completo con top 3 resaltados -->
       ${ranking.length > 0 ? `
       <div class="stats-section-card">
         <div class="stats-section-header">
@@ -1224,17 +1206,21 @@ function renderStatsGlobal(datos, container) {
           Ranking de Asesores
         </div>
         <div class="ranking-table">
-          ${ranking.map(([nombre, count], i) => `
-            <div class="ranking-row">
-              <div class="ranking-pos">${i + 1}</div>
-              <div class="ranking-avatar">${nombre.charAt(0).toUpperCase()}</div>
-              <div class="ranking-nombre">${nombre}</div>
+          ${ranking.map(([nombre, count], i) => {
+            const esTop = i < 3;
+            const medal = esTop ? medals[i] : "";
+            const barColor = esTop ? topColors[i] : null;
+            return `
+            <div class="ranking-row ${esTop ? "ranking-top" : ""}" style="${esTop ? `border-left: 3px solid ${topColors[i]};` : ""}">
+              <div class="ranking-pos">${medal || (i + 1)}</div>
+              <div class="ranking-avatar" style="${esTop ? `background: linear-gradient(135deg, ${topColors[i]}, ${topColors[i]}cc)` : ""}">${nombre.charAt(0).toUpperCase()}</div>
+              <div class="ranking-nombre" style="${esTop ? "font-weight:700; color:var(--slate-900)" : ""}">${nombre}</div>
               <div class="ranking-bar-wrap">
-                <div class="ranking-bar" style="width:${Math.round((count/maxLeads)*100)}%"></div>
+                <div class="ranking-bar" style="width:${Math.round((count/maxLeads)*100)}%; ${barColor ? `background:${barColor}` : ""}"></div>
               </div>
-              <div class="ranking-count">${count}</div>
-            </div>
-          `).join("")}
+              <div class="ranking-count" style="${esTop ? `color:${topColors[i]}` : ""}">${count}</div>
+            </div>`;
+          }).join("")}
         </div>
       </div>` : `
       <div class="empty-state" style="padding:3rem">
@@ -1247,10 +1233,26 @@ function renderStatsGlobal(datos, container) {
 }
 
 /* ── STATS INDIVIDUALES (un asesor) ── */
-let chartInstance = null;
+let chartInstance  = null;
+let calMesAsesor   = null; // {year, month} seleccionado para el calendario
 
 function renderStatsAsesor(asesor, datos, container) {
-  // Agrupar leads por día (clave "DD/MM/YYYY")
+  // Agrupar todos los leads del asesor (sin filtro de período) por día
+  // para el calendario (el calendario muestra el mes seleccionado)
+  const todosLeadsAsesor = allLeads.filter(l =>
+    (l.agente  || "").toLowerCase() === asesor.toLowerCase() ||
+    (l.usuario || "").toLowerCase() === asesor.toLowerCase()
+  );
+
+  const porDiaTodos = {};
+  todosLeadsAsesor.forEach(l => {
+    const fl = parseFechaParaFiltro(l.fecha);
+    if (!fl) return;
+    const key = `${String(fl.getDate()).padStart(2,"0")}/${String(fl.getMonth()+1).padStart(2,"0")}/${fl.getFullYear()}`;
+    porDiaTodos[key] = (porDiaTodos[key] || 0) + 1;
+  });
+
+  // Leads filtrados por período (para KPIs y gráfica)
   const porDia = {};
   datos.forEach(l => {
     const fl = parseFechaParaFiltro(l.fecha);
@@ -1259,29 +1261,26 @@ function renderStatsAsesor(asesor, datos, container) {
     porDia[key] = (porDia[key] || 0) + 1;
   });
 
-  // Determinar mes/año para el calendario (usar el del período o el actual)
+  // Mes/año para el calendario
   const hoy = new Date();
-  const mesRef = currentStatsPeriod === "rango" && document.getElementById("stats-desde")?.value
-    ? new Date(document.getElementById("stats-desde").value + "T12:00:00")
-    : hoy;
-  const year  = mesRef.getFullYear();
-  const month = mesRef.getMonth();
+  if (!calMesAsesor) calMesAsesor = { year: hoy.getFullYear(), month: hoy.getMonth() };
+  const { year, month } = calMesAsesor;
 
   const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
   const DIAS  = ["Lu","Ma","Mi","Ju","Vi","Sá","Do"];
 
-  // Construir calendario
-  const primerDia  = new Date(year, month, 1);
-  const ultimoDia  = new Date(year, month + 1, 0);
-  const offsetInicio = (primerDia.getDay() + 6) % 7; // lunes = 0
+  // Construir calendario con los datos de TODOS los meses (no solo el período)
+  const primerDia    = new Date(year, month, 1);
+  const ultimoDia    = new Date(year, month + 1, 0);
+  const offsetInicio = (primerDia.getDay() + 6) % 7;
 
   let calCells = "";
   for (let i = 0; i < offsetInicio; i++) calCells += `<div class="cal-cell cal-empty"></div>`;
 
   for (let d = 1; d <= ultimoDia.getDate(); d++) {
-    const key     = `${String(d).padStart(2,"0")}/${String(month+1).padStart(2,"0")}/${year}`;
-    const count   = porDia[key] || 0;
-    const esHoy   = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
+    const key        = `${String(d).padStart(2,"0")}/${String(month+1).padStart(2,"0")}/${year}`;
+    const count      = porDiaTodos[key] || 0;
+    const esHoy      = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
     const tieneLeads = count > 0;
     calCells += `
       <div class="cal-cell ${tieneLeads ? "cal-active" : ""} ${esHoy ? "cal-today" : ""}">
@@ -1290,12 +1289,22 @@ function renderStatsAsesor(asesor, datos, container) {
       </div>`;
   }
 
-  // Datos para la gráfica (por día, ordenados)
+  // Datos para la gráfica (período filtrado, ordenados)
   const diasOrdenados = Object.entries(porDia).sort((a, b) => {
     const [da, ma, ya] = a[0].split("/").map(Number);
     const [db, mb, yb] = b[0].split("/").map(Number);
     return new Date(ya, ma-1, da) - new Date(yb, mb-1, db);
   });
+
+  // Opciones para el selector de mes (últimos 24 meses)
+  let mesOpts = "";
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const sel = (y === year && m === month) ? "selected" : "";
+    mesOpts += `<option value="${y}-${m}" ${sel}>${MESES[m]} ${y}</option>`;
+  }
 
   container.innerHTML = `
     <div class="stats-asesor">
@@ -1305,7 +1314,7 @@ function renderStatsAsesor(asesor, datos, container) {
         <div class="kpi-asesor-avatar">${asesor.charAt(0).toUpperCase()}</div>
         <div>
           <div class="kpi-asesor-nombre">${asesor}</div>
-          <div class="kpi-asesor-sub">${datos.length} lead${datos.length !== 1 ? "s" : ""} · ${Object.keys(porDia).length} día${Object.keys(porDia).length !== 1 ? "s" : ""} en campo</div>
+          <div class="kpi-asesor-sub">${datos.length} lead${datos.length !== 1 ? "s" : ""} · ${Object.keys(porDia).length} día${Object.keys(porDia).length !== 1 ? "s" : ""} en campo (período seleccionado)</div>
         </div>
         <div class="kpi-asesor-badges">
           <div class="kpi-badge">
@@ -1325,9 +1334,22 @@ function renderStatsAsesor(asesor, datos, container) {
 
       <!-- Calendario -->
       <div class="stats-section-card">
-        <div class="stats-section-header">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Calendario de Campo — ${MESES[month]} ${year}
+        <div class="stats-section-header" style="justify-content:space-between; flex-wrap:wrap; gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendario de Campo
+          </div>
+          <div class="cal-mes-nav">
+            <button class="cal-nav-btn" onclick="cambiarMesCal(-1)" title="Mes anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <select class="cal-mes-select" onchange="seleccionarMesCal(this.value)">
+              ${mesOpts}
+            </select>
+            <button class="cal-nav-btn" onclick="cambiarMesCal(1)" title="Mes siguiente">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
         </div>
         <div class="calendar-wrap">
           <div class="cal-header">
@@ -1348,7 +1370,7 @@ function renderStatsAsesor(asesor, datos, container) {
       <div class="stats-section-card">
         <div class="stats-section-header">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          Producción por Salida de Campo
+          Producción por Salida de Campo (período seleccionado)
         </div>
         <div class="chart-container">
           <canvas id="chart-produccion"></canvas>
@@ -1365,10 +1387,26 @@ function renderStatsAsesor(asesor, datos, container) {
     </div>
   `;
 
-  // Dibujar gráfica si hay datos
   if (diasOrdenados.length > 0) {
     requestAnimationFrame(() => dibujarGrafica(diasOrdenados));
   }
+}
+
+/* ── Navegación del calendario ── */
+function cambiarMesCal(delta) {
+  if (!calMesAsesor) { const h = new Date(); calMesAsesor = { year: h.getFullYear(), month: h.getMonth() }; }
+  let { year, month } = calMesAsesor;
+  month += delta;
+  if (month > 11) { month = 0; year++; }
+  if (month < 0)  { month = 11; year--; }
+  calMesAsesor = { year, month };
+  renderStats();
+}
+
+function seleccionarMesCal(value) {
+  const [y, m] = value.split("-").map(Number);
+  calMesAsesor = { year: y, month: m };
+  renderStats();
 }
 
 /* ── GRÁFICA ── */

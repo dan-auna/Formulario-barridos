@@ -340,15 +340,20 @@ async function verRegistros() {
     allLeads.sort((a, b) => {
       const da = new Date(a.fecha);
       const db = new Date(b.fecha);
-      // Fechas válidas: comparar numéricamente
       if (!isNaN(da) && !isNaN(db)) return db - da;
-      // Si alguna no parsea, las ponemos al final
       if (isNaN(da)) return 1;
       if (isNaN(db)) return -1;
       return 0;
     });
 
     currentPage = 1;
+
+    // ── Mostrar controles de administrador ──
+    if (rol === "Administrador") {
+      document.getElementById("wrap-filtro-asesor").style.display = "flex";
+      document.getElementById("btn-ir-stats").style.display       = "flex";
+      poblarSelectAsesores();
+    }
 
     document.getElementById("records-sub").textContent =
       `${allLeads.length} lead${allLeads.length !== 1 ? "s" : ""} encontrado${allLeads.length !== 1 ? "s" : ""}`;
@@ -404,11 +409,17 @@ function toggleRangoPersonalizado() {
    FILTROS: BÚSQUEDA + FECHA
 ══════════════════════════════════════════════ */
 function aplicarFiltros() {
-  const q     = document.getElementById("search-input")?.value.toLowerCase() || "";
-  const desde = document.getElementById("fecha-desde")?.value || "";
-  const hasta = document.getElementById("fecha-hasta")?.value || "";
+  const q          = document.getElementById("search-input")?.value.toLowerCase() || "";
+  const desde      = document.getElementById("fecha-desde")?.value || "";
+  const hasta      = document.getElementById("fecha-hasta")?.value || "";
+  const asesorSel  = document.getElementById("filtro-asesor")?.value || "todos";
 
   const filtrados = allLeads.filter((l) => {
+    // Filtro asesor
+    const asesorOk = asesorSel === "todos" ||
+      (l.usuario || "").toLowerCase() === asesorSel.toLowerCase() ||
+      (l.agente  || "").toLowerCase() === asesorSel.toLowerCase();
+
     // Filtro texto
     const textoOk =
       !q ||
@@ -417,7 +428,7 @@ function aplicarFiltros() {
       (l.telefono || "").toString().includes(q)    ||
       (l.agente   || l.usuario || "").toLowerCase().includes(q);
 
-    // Filtro por período rápido o rango
+    // Filtro fecha
     let fechaOk = true;
     const fechaLead = parseFechaParaFiltro(l.fecha);
 
@@ -425,7 +436,6 @@ function aplicarFiltros() {
       const hoy = new Date(); hoy.setHours(0,0,0,0);
       const fin = new Date(); fin.setHours(23,59,59,999);
       fechaOk = fechaLead ? fechaLead >= hoy && fechaLead <= fin : false;
-
     } else if (activeQuickFilter === "semana") {
       const hoy  = new Date();
       const lunes = new Date(hoy);
@@ -435,20 +445,18 @@ function aplicarFiltros() {
       domingo.setDate(lunes.getDate() + 6);
       domingo.setHours(23,59,59,999);
       fechaOk = fechaLead ? fechaLead >= lunes && fechaLead <= domingo : false;
-
     } else if (activeQuickFilter === "mes") {
       const hoy    = new Date();
       const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
       const fin    = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
       fechaOk = fechaLead ? fechaLead >= inicio && fechaLead <= fin : false;
-
     } else if (activeQuickFilter === "rango" && (desde || hasta)) {
       if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T00:00:00");
       if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T23:59:59");
       if (!fechaLead) fechaOk = false;
     }
 
-    return textoOk && fechaOk;
+    return asesorOk && textoOk && fechaOk;
   });
 
   currentPage = 1;
@@ -1021,4 +1029,422 @@ function descargarQR() {
   link.download = `QR_Encuesta_${usuario}.png`;
   link.href     = canvas.toDataURL("image/png");
   link.click();
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — POBLAR SELECTORES DE ASESORES
+══════════════════════════════════════════════ */
+function poblarSelectAsesores() {
+  const asesores = [...new Set(allLeads.map(l => l.agente || l.usuario).filter(Boolean))].sort();
+
+  ["filtro-asesor", "stats-asesor"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    // Preservar opción "todos"
+    sel.innerHTML = `<option value="todos">Todos los asesores</option>`;
+    asesores.forEach(a => {
+      const opt = document.createElement("option");
+      opt.value = a;
+      opt.textContent = a;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — NAVEGACIÓN LISTA ↔ STATS
+══════════════════════════════════════════════ */
+function mostrarEstadisticas() {
+  document.getElementById("vista-lista").style.display = "none";
+  document.getElementById("vista-stats").style.display = "block";
+  // Sincronizar asesores en el select de stats
+  poblarSelectAsesores();
+  // Período inicial: mes
+  currentStatsPeriod = "mes";
+  document.querySelectorAll(".sp-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("sp-mes")?.classList.add("active");
+  document.getElementById("stats-rango-wrap").style.display = "none";
+  renderStats();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function volverALista() {
+  document.getElementById("vista-stats").style.display = "none";
+  document.getElementById("vista-lista").style.display = "block";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — PERÍODO DE ESTADÍSTICAS
+══════════════════════════════════════════════ */
+let currentStatsPeriod = "mes";
+
+function setStatsPeriod(period, btn) {
+  currentStatsPeriod = period;
+  document.querySelectorAll(".sp-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const rangoWrap = document.getElementById("stats-rango-wrap");
+  rangoWrap.style.display = period === "rango" ? "block" : "none";
+  if (period !== "rango") renderStats();
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — FILTRAR LEADS PARA STATS
+══════════════════════════════════════════════ */
+function getLeadsParaStats() {
+  const asesorSel = document.getElementById("stats-asesor")?.value || "todos";
+  const desde     = document.getElementById("stats-desde")?.value || "";
+  const hasta     = document.getElementById("stats-hasta")?.value || "";
+  const hoy       = new Date();
+
+  return allLeads.filter(l => {
+    const asesorOk = asesorSel === "todos" ||
+      (l.agente  || "").toLowerCase() === asesorSel.toLowerCase() ||
+      (l.usuario || "").toLowerCase() === asesorSel.toLowerCase();
+
+    const fl = parseFechaParaFiltro(l.fecha);
+    let fechaOk = true;
+
+    if (currentStatsPeriod === "hoy") {
+      const ini = new Date(hoy); ini.setHours(0,0,0,0);
+      const fin = new Date(hoy); fin.setHours(23,59,59,999);
+      fechaOk = fl ? fl >= ini && fl <= fin : false;
+    } else if (currentStatsPeriod === "semana") {
+      const lun = new Date(hoy);
+      lun.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
+      lun.setHours(0,0,0,0);
+      const dom = new Date(lun); dom.setDate(lun.getDate() + 6); dom.setHours(23,59,59,999);
+      fechaOk = fl ? fl >= lun && fl <= dom : false;
+    } else if (currentStatsPeriod === "mes") {
+      const ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
+      const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
+      fechaOk = fl ? fl >= ini && fl <= fin : false;
+    } else if (currentStatsPeriod === "rango") {
+      if (desde && fl) fechaOk = fechaOk && fl >= new Date(desde + "T00:00:00");
+      if (hasta && fl) fechaOk = fechaOk && fl <= new Date(hasta + "T23:59:59");
+      if (!fl && (desde || hasta)) fechaOk = false;
+    }
+
+    return asesorOk && fechaOk;
+  });
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN — RENDER STATS PRINCIPAL
+══════════════════════════════════════════════ */
+function renderStats() {
+  const asesorSel = document.getElementById("stats-asesor")?.value || "todos";
+  const datos     = getLeadsParaStats();
+  const container = document.getElementById("stats-content");
+
+  if (asesorSel === "todos") {
+    renderStatsGlobal(datos, container);
+  } else {
+    renderStatsAsesor(asesorSel, datos, container);
+  }
+}
+
+/* ── STATS GLOBALES (todos los asesores) ── */
+function renderStatsGlobal(datos, container) {
+  // Conteo por asesor
+  const porAsesor = {};
+  datos.forEach(l => {
+    const key = l.agente || l.usuario || "—";
+    porAsesor[key] = (porAsesor[key] || 0) + 1;
+  });
+
+  const ranking = Object.entries(porAsesor).sort((a, b) => b[1] - a[1]);
+  const top3    = ranking.slice(0, 3);
+  const medals  = ["🥇","🥈","🥉"];
+  const colores  = ["#FFD700","#C0C0C0","#CD7F32"];
+
+  // Calcular máximo para barras proporcionales
+  const maxLeads = ranking[0]?.[1] || 1;
+
+  const periodLabel = { mes: "este mes", semana: "esta semana", hoy: "hoy", rango: "en el rango seleccionado" };
+
+  container.innerHTML = `
+    <div class="stats-global">
+
+      <!-- KPI principal -->
+      <div class="kpi-card kpi-main">
+        <div class="kpi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="kpi-num">${datos.length}</div>
+          <div class="kpi-label">leads captados ${periodLabel[currentStatsPeriod] || ""}</div>
+        </div>
+      </div>
+
+      <!-- KPIs secundarios -->
+      <div class="kpi-grid">
+        <div class="kpi-card kpi-sm">
+          <div class="kpi-sm-num">${Object.keys(porAsesor).length}</div>
+          <div class="kpi-sm-label">asesores activos</div>
+        </div>
+        <div class="kpi-card kpi-sm">
+          <div class="kpi-sm-num">${Object.keys(porAsesor).length ? Math.round(datos.length / Object.keys(porAsesor).length) : 0}</div>
+          <div class="kpi-sm-label">leads promedio / asesor</div>
+        </div>
+        <div class="kpi-card kpi-sm">
+          <div class="kpi-sm-num">${ranking[0]?.[1] || 0}</div>
+          <div class="kpi-sm-label">máximo individual</div>
+        </div>
+      </div>
+
+      ${currentStatsPeriod === "mes" && top3.length > 0 ? `
+      <!-- Top 3 del mes -->
+      <div class="stats-section-card">
+        <div class="stats-section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Top 3 Asesores del Mes
+        </div>
+        <div class="top3-list">
+          ${top3.map(([nombre, count], i) => `
+            <div class="top3-item">
+              <div class="top3-medal">${medals[i]}</div>
+              <div class="top3-info">
+                <div class="top3-nombre">${nombre}</div>
+                <div class="top3-bar-wrap">
+                  <div class="top3-bar" style="width:${Math.round((count/maxLeads)*100)}%; background:${colores[i]}"></div>
+                </div>
+              </div>
+              <div class="top3-count">${count} lead${count !== 1 ? "s" : ""}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>` : ""}
+
+      <!-- Ranking completo -->
+      ${ranking.length > 0 ? `
+      <div class="stats-section-card">
+        <div class="stats-section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Ranking de Asesores
+        </div>
+        <div class="ranking-table">
+          ${ranking.map(([nombre, count], i) => `
+            <div class="ranking-row">
+              <div class="ranking-pos">${i + 1}</div>
+              <div class="ranking-avatar">${nombre.charAt(0).toUpperCase()}</div>
+              <div class="ranking-nombre">${nombre}</div>
+              <div class="ranking-bar-wrap">
+                <div class="ranking-bar" style="width:${Math.round((count/maxLeads)*100)}%"></div>
+              </div>
+              <div class="ranking-count">${count}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>` : `
+      <div class="empty-state" style="padding:3rem">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <p>No hay leads en el período seleccionado.</p>
+      </div>`}
+
+    </div>
+  `;
+}
+
+/* ── STATS INDIVIDUALES (un asesor) ── */
+let chartInstance = null;
+
+function renderStatsAsesor(asesor, datos, container) {
+  // Agrupar leads por día (clave "DD/MM/YYYY")
+  const porDia = {};
+  datos.forEach(l => {
+    const fl = parseFechaParaFiltro(l.fecha);
+    if (!fl) return;
+    const key = `${String(fl.getDate()).padStart(2,"0")}/${String(fl.getMonth()+1).padStart(2,"0")}/${fl.getFullYear()}`;
+    porDia[key] = (porDia[key] || 0) + 1;
+  });
+
+  // Determinar mes/año para el calendario (usar el del período o el actual)
+  const hoy = new Date();
+  const mesRef = currentStatsPeriod === "rango" && document.getElementById("stats-desde")?.value
+    ? new Date(document.getElementById("stats-desde").value + "T12:00:00")
+    : hoy;
+  const year  = mesRef.getFullYear();
+  const month = mesRef.getMonth();
+
+  const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  const DIAS  = ["Lu","Ma","Mi","Ju","Vi","Sá","Do"];
+
+  // Construir calendario
+  const primerDia  = new Date(year, month, 1);
+  const ultimoDia  = new Date(year, month + 1, 0);
+  const offsetInicio = (primerDia.getDay() + 6) % 7; // lunes = 0
+
+  let calCells = "";
+  for (let i = 0; i < offsetInicio; i++) calCells += `<div class="cal-cell cal-empty"></div>`;
+
+  for (let d = 1; d <= ultimoDia.getDate(); d++) {
+    const key     = `${String(d).padStart(2,"0")}/${String(month+1).padStart(2,"0")}/${year}`;
+    const count   = porDia[key] || 0;
+    const esHoy   = d === hoy.getDate() && month === hoy.getMonth() && year === hoy.getFullYear();
+    const tieneLeads = count > 0;
+    calCells += `
+      <div class="cal-cell ${tieneLeads ? "cal-active" : ""} ${esHoy ? "cal-today" : ""}">
+        <span class="cal-day-num">${d}</span>
+        ${tieneLeads ? `<span class="cal-count">${count}</span>` : ""}
+      </div>`;
+  }
+
+  // Datos para la gráfica (por día, ordenados)
+  const diasOrdenados = Object.entries(porDia).sort((a, b) => {
+    const [da, ma, ya] = a[0].split("/").map(Number);
+    const [db, mb, yb] = b[0].split("/").map(Number);
+    return new Date(ya, ma-1, da) - new Date(yb, mb-1, db);
+  });
+
+  container.innerHTML = `
+    <div class="stats-asesor">
+
+      <!-- KPI asesor -->
+      <div class="kpi-asesor-header">
+        <div class="kpi-asesor-avatar">${asesor.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="kpi-asesor-nombre">${asesor}</div>
+          <div class="kpi-asesor-sub">${datos.length} lead${datos.length !== 1 ? "s" : ""} · ${Object.keys(porDia).length} día${Object.keys(porDia).length !== 1 ? "s" : ""} en campo</div>
+        </div>
+        <div class="kpi-asesor-badges">
+          <div class="kpi-badge">
+            <div class="kpi-badge-num">${datos.length}</div>
+            <div class="kpi-badge-label">Total leads</div>
+          </div>
+          <div class="kpi-badge">
+            <div class="kpi-badge-num">${Object.keys(porDia).length}</div>
+            <div class="kpi-badge-label">Días en campo</div>
+          </div>
+          <div class="kpi-badge">
+            <div class="kpi-badge-num">${Object.keys(porDia).length ? (datos.length / Object.keys(porDia).length).toFixed(1) : 0}</div>
+            <div class="kpi-badge-label">Promedio/día</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Calendario -->
+      <div class="stats-section-card">
+        <div class="stats-section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Calendario de Campo — ${MESES[month]} ${year}
+        </div>
+        <div class="calendar-wrap">
+          <div class="cal-header">
+            ${DIAS.map(d => `<div class="cal-header-cell">${d}</div>`).join("")}
+          </div>
+          <div class="cal-grid">
+            ${calCells}
+          </div>
+          <div class="cal-legend">
+            <span class="cal-legend-dot active-dot"></span> Días con leads
+            <span class="cal-today-dot"></span> Hoy
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráfica de producción -->
+      ${diasOrdenados.length > 0 ? `
+      <div class="stats-section-card">
+        <div class="stats-section-header">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Producción por Salida de Campo
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-produccion"></canvas>
+        </div>
+        <div class="chart-trend" id="chart-trend"></div>
+      </div>` : `
+      <div class="stats-section-card">
+        <div class="empty-state" style="padding:2rem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <p>No hay datos de campo en el período seleccionado.</p>
+        </div>
+      </div>`}
+
+    </div>
+  `;
+
+  // Dibujar gráfica si hay datos
+  if (diasOrdenados.length > 0) {
+    requestAnimationFrame(() => dibujarGrafica(diasOrdenados));
+  }
+}
+
+/* ── GRÁFICA ── */
+function dibujarGrafica(diasOrdenados) {
+  const canvas = document.getElementById("chart-produccion");
+  if (!canvas) return;
+
+  const labels = diasOrdenados.map(([k]) => {
+    const [d, m] = k.split("/");
+    return `${d}/${m}`;
+  });
+  const valores = diasOrdenados.map(([, v]) => v);
+
+  // Calcular tendencia
+  const n = valores.length;
+  let trend = "estable";
+  if (n >= 3) {
+    const mitad    = Math.floor(n / 2);
+    const primera  = valores.slice(0, mitad).reduce((a, b) => a + b, 0) / mitad;
+    const segunda  = valores.slice(n - mitad).reduce((a, b) => a + b, 0) / mitad;
+    if (segunda > primera * 1.1)      trend = "subiendo";
+    else if (segunda < primera * 0.9) trend = "bajando";
+  }
+
+  const trendConfig = {
+    subiendo: { icon: "📈", label: "Producción en tendencia ascendente", color: "#10b981" },
+    bajando:  { icon: "📉", label: "Producción en tendencia descendente", color: "#ef4444" },
+    estable:  { icon: "➡️", label: "Producción estable", color: "#007bc3" },
+  };
+  const tc = trendConfig[trend];
+  const trendEl = document.getElementById("chart-trend");
+  if (trendEl) trendEl.innerHTML = `<span class="trend-badge" style="border-color:${tc.color};color:${tc.color}">${tc.icon} ${tc.label}</span>`;
+
+  // Destruir gráfica previa si existe
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  const ctx = canvas.getContext("2d");
+  chartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Leads por día",
+        data: valores,
+        borderColor: "#005fcc",
+        backgroundColor: "rgba(0,95,204,0.10)",
+        borderWidth: 2.5,
+        pointBackgroundColor: "#005fcc",
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        fill: true,
+        tension: 0.35,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.raw} lead${ctx.raw !== 1 ? "s" : ""}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, font: { family: "Outfit", size: 12 } },
+          grid: { color: "rgba(0,0,0,0.06)" },
+        },
+        x: {
+          ticks: { font: { family: "Outfit", size: 11 } },
+          grid: { display: false },
+        },
+      },
+    },
+  });
 }

@@ -394,22 +394,25 @@ async function verRegistros() {
       ? todosLosLeads.map(normalizarClaves)
       : todosLosLeads.filter((l) => l.usuario === miUser).map(normalizarClaves);
 
-    // Ordenar de más nuevo a más antiguo
+    // Ordenar de más nuevo a más antiguo (usando parseFechaParaFiltro para manejar todos los formatos)
     allLeads.sort((a, b) => {
-      const da = new Date(a.fecha);
-      const db = new Date(b.fecha);
-      if (!isNaN(da) && !isNaN(db)) return db - da;
-      if (isNaN(da)) return 1;
-      if (isNaN(db)) return -1;
+      const da = parseFechaParaFiltro(a.fecha);
+      const db = parseFechaParaFiltro(b.fecha);
+      if (da && db) return db - da;
+      if (!da) return 1;
+      if (!db) return -1;
       return 0;
     });
 
     currentPage = 1;
 
-    // ── Mostrar controles de administrador ──
+    // ── Mostrar botón de estadísticas para TODOS los usuarios ──
+    document.getElementById("btn-ir-stats").style.display = "flex";
+
+    // ── Controles exclusivos de administrador ──
     if (rol === "Administrador") {
       document.getElementById("wrap-filtro-asesor").style.display = "flex";
-      document.getElementById("btn-ir-stats").style.display       = "flex";
+      document.getElementById("wrap-stats-asesor").style.display  = "flex";
       poblarSelectAsesores();
     }
 
@@ -1142,13 +1145,32 @@ function poblarSelectAsesores() {
 function mostrarEstadisticas() {
   document.getElementById("vista-lista").style.display = "none";
   document.getElementById("vista-stats").style.display = "block";
-  // Sincronizar asesores en el select de stats
-  poblarSelectAsesores();
+
+  const rol    = leerSesion()?.rol;
+  const agente = leerSesion()?.agente || leerSesion()?.usuario;
+
+  if (rol === "Administrador") {
+    // Admin: poblar selector y mostrar vista global por defecto
+    poblarSelectAsesores();
+    const sel = document.getElementById("stats-asesor");
+    if (sel) sel.value = "todos";
+    document.querySelector(".stats-topbar-title").textContent = "Panel de Estadísticas";
+  } else {
+    // Asesor: forzar su propio nombre en el selector oculto
+    const sel = document.getElementById("stats-asesor");
+    if (sel) {
+      sel.innerHTML = `<option value="${agente}" selected>${agente}</option>`;
+      sel.value = agente;
+    }
+    document.querySelector(".stats-topbar-title").textContent = "Mis Estadísticas";
+  }
+
   // Período inicial: mes
   currentStatsPeriod = "mes";
   document.querySelectorAll(".sp-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("sp-mes")?.classList.add("active");
   document.getElementById("stats-rango-wrap").style.display = "none";
+  calMesAsesor = null;
   renderStats();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -1185,15 +1207,24 @@ function setStatsPeriod(period, btn) {
    ADMIN — FILTRAR LEADS PARA STATS
 ══════════════════════════════════════════════ */
 function getLeadsParaStats() {
+  const rol       = leerSesion()?.rol;
+  const agente    = leerSesion()?.agente || leerSesion()?.usuario || "";
   const asesorSel = document.getElementById("stats-asesor")?.value || "todos";
   const desde     = document.getElementById("stats-desde")?.value || "";
   const hasta     = document.getElementById("stats-hasta")?.value || "";
   const hoy       = new Date();
 
   return allLeads.filter(l => {
-    const asesorOk = asesorSel === "todos" ||
-      (l.agente  || "").toLowerCase() === asesorSel.toLowerCase() ||
-      (l.usuario || "").toLowerCase() === asesorSel.toLowerCase();
+    // Filtro asesor: admin respeta el selector, no-admin siempre filtra por el suyo
+    let asesorOk;
+    if (rol === "Administrador") {
+      asesorOk = asesorSel === "todos" ||
+        (l.agente  || "").toLowerCase() === asesorSel.toLowerCase() ||
+        (l.usuario || "").toLowerCase() === asesorSel.toLowerCase();
+    } else {
+      asesorOk = (l.agente  || "").toLowerCase() === agente.toLowerCase() ||
+                 (l.usuario || "").toLowerCase() === agente.toLowerCase();
+    }
 
     const fl = parseFechaParaFiltro(l.fecha);
     let fechaOk = true;
@@ -1226,11 +1257,23 @@ function getLeadsParaStats() {
    ADMIN — RENDER STATS PRINCIPAL
 ══════════════════════════════════════════════ */
 function renderStats() {
+  const rol       = leerSesion()?.rol;
+  const agente    = leerSesion()?.agente || leerSesion()?.usuario;
   const asesorSel = document.getElementById("stats-asesor")?.value || "todos";
   const datos     = getLeadsParaStats();
   const container = document.getElementById("stats-content");
 
-  // Reset calendario al mes actual al cambiar de asesor
+  // No-admin siempre ve su propio calendario individual
+  if (rol !== "Administrador") {
+    if (!calMesAsesor) {
+      const h = new Date();
+      calMesAsesor = { year: h.getFullYear(), month: h.getMonth() };
+    }
+    renderStatsAsesor(agente, datos, container);
+    return;
+  }
+
+  // Admin: reset calendario al cambiar de asesor a "todos"
   if (asesorSel === "todos") {
     calMesAsesor = null;
     renderStatsGlobal(datos, container);

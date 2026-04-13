@@ -262,8 +262,8 @@
                   </select>
                   <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </div>
-                <!-- Botón estadísticas (solo admin) -->
-                <button class="btn-stats admin-only" id="btn-ir-stats" onclick="mostrarEstadisticas()" style="display:none" title="Ver estadísticas">
+                <!-- Botón estadísticas (todos los usuarios) -->
+                <button class="btn-stats" id="btn-ir-stats" onclick="mostrarEstadisticas()" style="display:none" title="Ver mis estadísticas">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                   Estadísticas
                 </button>
@@ -328,8 +328,8 @@
                 Volver a registros
               </button>
               <h2 class="stats-topbar-title">Panel de Estadísticas</h2>
-              <!-- Selector asesor para stats -->
-              <div class="select-wrap stats-asesor-wrap">
+              <!-- Selector asesor para stats (solo admin) -->
+              <div class="select-wrap stats-asesor-wrap" id="wrap-stats-asesor" style="display:none">
                 <select id="stats-asesor" onchange="renderStats()">
                   <option value="todos">Todos los asesores</option>
                 </select>

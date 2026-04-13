@@ -191,6 +191,31 @@
                 </div>
 
                 <div class="field-group full-width">
+                  <label for="temperatura">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+                    Temperatura del Lead
+                  </label>
+                  <div class="select-wrap">
+                    <select id="temperatura" required>
+                      <option value="" disabled selected>Selecciona la temperatura</option>
+                      <option value="Frío">🔴 Frío</option>
+                      <option value="Tibio">🟡 Tibio</option>
+                      <option value="Caliente">🟢 Caliente</option>
+                    </select>
+                    <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+                  <span class="field-error" id="err-temperatura"></span>
+                </div>
+
+                <div class="field-group full-width">
+                  <label for="referencia">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Referencia de Ubicación <span class="optional-tag">Opcional</span>
+                  </label>
+                  <input type="text" id="referencia" placeholder="Ej: Parque central, frente al banco...">
+                </div>
+
+                <div class="field-group full-width">
                   <label for="comentarios">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                     Comentarios <span class="optional-tag">Opcional</span>
@@ -572,6 +597,31 @@
               <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <span class="field-error" id="edit-err-producto"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label for="edit-temperatura">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+              Temperatura del Lead
+            </label>
+            <div class="select-wrap">
+              <select id="edit-temperatura">
+                <option value="" disabled>Selecciona la temperatura</option>
+                <option value="Frío">🔴 Frío</option>
+                <option value="Tibio">🟡 Tibio</option>
+                <option value="Caliente">🟢 Caliente</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <span class="field-error" id="edit-err-temperatura"></span>
+          </div>
+
+          <div class="field-group full-width">
+            <label for="edit-referencia">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Referencia de Ubicación <span class="optional-tag">Opcional</span>
+            </label>
+            <input type="text" id="edit-referencia" placeholder="Ej: Parque central, frente al banco...">
           </div>
 
           <div class="field-group full-width">

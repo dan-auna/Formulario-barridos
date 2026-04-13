@@ -11,6 +11,63 @@ let currentPage = 1;
 const PAGE_SIZE = 20;
 
 /* ══════════════════════════════════════════════
+   SESIÓN — localStorage con expiración 15 min
+══════════════════════════════════════════════ */
+const SESSION_KEY     = "auna_session";
+const SESSION_MINUTES = 15;
+
+function guardarSesion(usuario, rol, agente) {
+  const sesion = {
+    usuario,
+    rol,
+    agente,
+    expira: Date.now() + SESSION_MINUTES * 60 * 1000,
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(sesion));
+}
+
+function leerSesion() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const sesion = JSON.parse(raw);
+    if (Date.now() > sesion.expira) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    // Renovar los 15 minutos con cada actividad
+    sesion.expira = Date.now() + SESSION_MINUTES * 60 * 1000;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sesion));
+    return sesion;
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return null;
+  }
+}
+
+function borrarSesion() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+// Verificar sesión al cargar la página
+(function verificarSesionAlCargar() {
+  const sesion = leerSesion();
+  if (sesion) {
+    // Restaurar la UI directamente sin pedir login
+    mostrarPantallaFormulario({
+      usuario: sesion.usuario,
+      rol:     sesion.rol,
+      agente:  sesion.agente,
+    });
+  }
+})();
+
+// Renovar expiración con cualquier interacción del usuario
+document.addEventListener("click",    () => leerSesion());
+document.addEventListener("keydown",  () => leerSesion());
+document.addEventListener("touchstart", () => leerSesion());
+
+/* ══════════════════════════════════════════════
    SHOW / HIDE PASSWORD
 ══════════════════════════════════════════════ */
 function togglePass() {
@@ -54,9 +111,7 @@ async function login() {
     );
 
     if (encontrado) {
-      sessionStorage.setItem("usuarioActivo", encontrado.usuario);
-      sessionStorage.setItem("rolActivo",     encontrado.rol);
-      sessionStorage.setItem("agenteActivo",  encontrado.agente);
+      guardarSesion(encontrado.usuario, encontrado.rol, encontrado.agente);
       mostrarPantallaFormulario(encontrado);
     } else {
       showLoginError();
@@ -152,7 +207,7 @@ function mostrarPantallaFormulario(user) {
    LOGOUT
 ══════════════════════════════════════════════ */
 function logout() {
-  sessionStorage.clear();
+  borrarSesion();
   document.getElementById("form-section").style.display  = "none";
   document.getElementById("login-section").style.display = "block";
   document.getElementById("username").value = "";
@@ -224,8 +279,8 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
   setSubmitLoading(true);
 
   const datos = {
-    usuario:     sessionStorage.getItem("usuarioActivo"),
-    agente:      sessionStorage.getItem("agenteActivo"),
+    usuario:     leerSesion()?.usuario,
+    agente:      leerSesion()?.agente,
     fecha:       (() => {
                    const now = new Date();
                    const parts = new Intl.DateTimeFormat("en-US", {
@@ -324,8 +379,8 @@ async function verRegistros() {
       <p>Cargando registros...</p>
     </div>`;
 
-  const rol    = sessionStorage.getItem("rolActivo");
-  const miUser = sessionStorage.getItem("usuarioActivo");
+  const rol    = leerSesion()?.rol;
+  const miUser = leerSesion()?.usuario;
 
   try {
     const response = await fetch(`${URL_GOOGLE_SCRIPT}?action=getLeads`);
@@ -506,7 +561,7 @@ function exportarExcel() {
   if (syncBtn) syncBtn.classList.add("active");
 
   // Nombre de archivo por defecto
-  const usuario = sessionStorage.getItem("agenteActivo") || sessionStorage.getItem("usuarioActivo") || "Leads";
+  const usuario = leerSesion()?.agente || leerSesion()?.usuario || "Leads";
   document.getElementById("export-filename").value = `Leads_${usuario}`;
   actualizarPreview();
 
@@ -590,9 +645,9 @@ function ejecutarExportacion() {
     return;
   }
 
-  const rol           = sessionStorage.getItem("rolActivo");
+  const rol           = leerSesion()?.rol;
   const mostrarAsesor = rol === "Administrador";
-  const usuario       = sessionStorage.getItem("agenteActivo") || sessionStorage.getItem("usuarioActivo") || "";
+  const usuario       = leerSesion()?.agente || leerSesion()?.usuario || "";
   const filename      = (document.getElementById("export-filename").value.trim() || "Mis_Leads") + ".xlsx";
 
   // Construir filas
@@ -696,7 +751,7 @@ function renderTable(datos, contenedor) {
     return;
   }
 
-  const rol           = sessionStorage.getItem("rolActivo");
+  const rol           = leerSesion()?.rol;
   const mostrarAsesor = rol === "Administrador";
   const totalPages    = Math.ceil(datos.length / PAGE_SIZE);
 
@@ -950,7 +1005,7 @@ function showToastEdit() {
 let qrInstance = null;
 
 function iniciarEncuesta() {
-  const usuario = sessionStorage.getItem("usuarioActivo") || "asesor";
+  const usuario = leerSesion()?.usuario || "asesor";
   // La URL de la encuesta pública con el usuario codificado como parámetro
   const baseUrl = window.location.href.replace(/\/[^/]*$/, "") + "/encuesta.html";
   const encuestaUrl = `${baseUrl}?u=${encodeURIComponent(usuario)}`;
@@ -1024,7 +1079,7 @@ function descargarQR() {
   const canvas = document.querySelector("#qr-container canvas");
   if (!canvas) return;
 
-  const usuario = sessionStorage.getItem("usuarioActivo") || "asesor";
+  const usuario = leerSesion()?.usuario || "asesor";
   const link    = document.createElement("a");
   link.download = `QR_Encuesta_${usuario}.png`;
   link.href     = canvas.toDataURL("image/png");

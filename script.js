@@ -238,10 +238,11 @@ function validateForm() {
   let valid = true;
 
   const fields = [
-    { id: "nombre",   errId: "err-nombre",   msg: "Ingresa el nombre completo",                    check: (v) => v.trim().length >= 3 },
-    { id: "telefono", errId: "err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos",  check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
-    { id: "edad",     errId: "err-edad",     msg: "Ingresa una edad válida (1–120)",                check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
-    { id: "producto", errId: "err-producto", msg: "Selecciona un producto",                        check: (v) => v !== "" },
+    { id: "nombre",      errId: "err-nombre",      msg: "Ingresa el nombre completo",                   check: (v) => v.trim().length >= 3 },
+    { id: "telefono",    errId: "err-telefono",    msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
+    { id: "edad",        errId: "err-edad",        msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
+    { id: "producto",    errId: "err-producto",    msg: "Selecciona un producto",                       check: (v) => v !== "" },
+    { id: "temperatura", errId: "err-temperatura", msg: "Selecciona la temperatura del lead",           check: (v) => v !== "" },
   ];
 
   fields.forEach(({ id, errId, msg, check }) => {
@@ -261,7 +262,7 @@ function validateForm() {
 }
 
 // Remove invalid class on input
-["nombre", "telefono", "edad", "producto"].forEach((id) => {
+["nombre", "telefono", "edad", "producto", "temperatura"].forEach((id) => {
   const el = document.getElementById(id);
   if (el) {
     el.addEventListener("input",  () => { el.classList.remove("invalid"); document.getElementById(`err-${id}`)?.textContent && (document.getElementById(`err-${id}`).textContent = ""); });
@@ -300,6 +301,8 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     telefono:    parseInt(document.getElementById("telefono").value.replace(/\s/g, ""), 10),
     edad:        parseInt(document.getElementById("edad").value, 10),
     producto:    document.getElementById("producto").value,
+    temperatura: document.getElementById("temperatura").value,
+    referencia:  document.getElementById("referencia").value.trim(),
     comentarios: document.getElementById("comentarios").value.trim(),
   };
 
@@ -314,7 +317,7 @@ document.getElementById("barrido-form").addEventListener("submit", async functio
     showToast();
 
     // Clear validation states
-    ["nombre", "telefono", "edad", "producto"].forEach((id) => {
+    ["nombre", "telefono", "edad", "producto", "temperatura"].forEach((id) => {
       document.getElementById(id)?.classList.remove("invalid");
     });
 
@@ -651,19 +654,20 @@ function ejecutarExportacion() {
   const filename      = (document.getElementById("export-filename").value.trim() || "Mis_Leads") + ".xlsx";
 
   // Construir filas
-  const headers = ["Fecha", "Nombre", "Teléfono", "Edad", "Producto", ...(mostrarAsesor ? ["Asesor"] : []), "Comentarios"];
+  const headers = ["Fecha", "Nombre", "Teléfono", "Edad", "Producto", "Temperatura", ...(mostrarAsesor ? ["Asesor"] : []), "Referencia", "Comentarios"];
 
   const filas = datos.map(d => {
     const row = {
-      "Fecha":       formatFecha(d.fecha),
-      "Nombre":      d.nombre || "",
-      "Teléfono":    String(d.telefono ?? d["teléfono"] ?? ""),
-      "Edad":        d.edad ?? "",
-      "Producto":    d.producto || "",
-      "Comentarios": d.comentarios || "",
+      "Fecha":        formatFecha(d.fecha),
+      "Nombre":       d.nombre || "",
+      "Teléfono":     String(d.telefono ?? d["teléfono"] ?? ""),
+      "Edad":         d.edad ?? "",
+      "Producto":     d.producto || "",
+      "Temperatura":  d.temperatura || "",
+      "Referencia":   d.referencia || "",
+      "Comentarios":  d.comentarios || "",
     };
     if (mostrarAsesor) row["Asesor"] = d.agente || d.usuario || "";
-    // Reordenar para que Asesor quede antes de Comentarios
     const ordered = {};
     headers.forEach(h => { ordered[h] = row[h] ?? ""; });
     return ordered;
@@ -679,8 +683,10 @@ function ejecutarExportacion() {
     { wch: 14 }, // Teléfono
     { wch: 8  }, // Edad
     { wch: 18 }, // Producto
+    { wch: 12 }, // Temperatura
     ...(mostrarAsesor ? [{ wch: 16 }] : []), // Asesor
-    { wch: 40 }, // Comentarios
+    { wch: 28 }, // Referencia
+    { wch: 36 }, // Comentarios
   ];
 
   const wb = XLSX.utils.book_new();
@@ -741,6 +747,20 @@ function getBadgeClass(producto) {
   return map[producto] || "badge-classic";
 }
 
+function getTempBadge(temp) {
+  if (!temp) return `<span style="color:var(--slate-300)">—</span>`;
+  const cfg = {
+    "Frío":     { bg: "#fee2e2", color: "#b91c1c", dot: "#ef4444" },
+    "Tibio":    { bg: "#fef9c3", color: "#92400e", dot: "#f59e0b" },
+    "Caliente": { bg: "#dcfce7", color: "#166534", dot: "#22c55e" },
+  };
+  const c = cfg[temp];
+  if (!c) return temp;
+  return `<span class="badge-temp" style="background:${c.bg};color:${c.color}">
+    <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};display:inline-block;margin-right:4px;flex-shrink:0"></span>${temp}
+  </span>`;
+}
+
 function renderTable(datos, contenedor) {
   if (datos.length === 0) {
     contenedor.innerHTML = `
@@ -773,7 +793,9 @@ function renderTable(datos, contenedor) {
           <th>Teléfono</th>
           <th>Edad</th>
           <th>Producto</th>
+          <th>Temp.</th>
           ${mostrarAsesor ? "<th>Asesor</th>" : ""}
+          <th>Referencia</th>
           <th>Comentarios</th>
           <th style="width:40px"></th>
         </tr>
@@ -783,6 +805,7 @@ function renderTable(datos, contenedor) {
   pagSlice.forEach((d) => {
     const badgeClass = getBadgeClass(d.producto);
     const globalIdx  = allLeads.indexOf(d);
+    const tempBadge  = getTempBadge(d.temperatura);
     html += `
       <tr class="row-clickable" onclick="abrirEditModal(${globalIdx})" title="Clic para editar este lead">
         <td style="white-space:nowrap; color:var(--slate-500); font-size:0.8rem">${formatFecha(d.fecha)}</td>
@@ -790,8 +813,10 @@ function renderTable(datos, contenedor) {
         <td>${String(d.telefono ?? d["teléfono"] ?? "").trim() || "—"}</td>
         <td style="text-align:center">${d.edad ?? d["edad"] ?? "—"}</td>
         <td><span class="badge-product ${badgeClass}">${d.producto || "—"}</span></td>
+        <td>${tempBadge}</td>
         ${mostrarAsesor ? `<td style="color:var(--slate-500); font-size:0.82rem">${d.agente || d.usuario || "—"}</td>` : ""}
-        <td style="color:var(--slate-500); font-size:0.82rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${d.comentarios || ""}">${d.comentarios || "—"}</td>
+        <td style="color:var(--slate-500); font-size:0.82rem; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${d.referencia || ""}">${d.referencia || "—"}</td>
+        <td style="color:var(--slate-500); font-size:0.82rem; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${d.comentarios || ""}">${d.comentarios || "—"}</td>
         <td class="td-edit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></td>
       </tr>`;
   });
@@ -870,6 +895,8 @@ function abrirEditModal(idx) {
   document.getElementById("edit-telefono").value    = String(lead.telefono ?? lead["teléfono"] ?? "");
   document.getElementById("edit-edad").value        = lead.edad        ?? "";
   document.getElementById("edit-producto").value    = lead.producto    || "";
+  document.getElementById("edit-temperatura").value = lead.temperatura || "";
+  document.getElementById("edit-referencia").value  = lead.referencia  || "";
   document.getElementById("edit-comentarios").value = lead.comentarios || "";
 
   // Mostrar fecha (solo lectura en el subtítulo)
@@ -914,7 +941,8 @@ function validateEditForm() {
     { id: "edit-nombre",   errId: "edit-err-nombre",   msg: "Ingresa el nombre completo",      check: (v) => v.trim().length >= 3 },
     { id: "edit-telefono", errId: "edit-err-telefono", msg: "El teléfono debe tener exactamente 9 dígitos", check: (v) => /^\d{9}$/.test(v.replace(/\s/g, "")) },
     { id: "edit-edad",     errId: "edit-err-edad",     msg: "Ingresa una edad válida (1–120)",               check: (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 120 },
-    { id: "edit-producto", errId: "edit-err-producto", msg: "Selecciona un producto",          check: (v) => v !== "" },
+    { id: "edit-producto",    errId: "edit-err-producto",    msg: "Selecciona un producto",              check: (v) => v !== "" },
+    { id: "edit-temperatura", errId: "edit-err-temperatura", msg: "Selecciona la temperatura del lead",   check: (v) => v !== "" },
   ];
   fields.forEach(({ id, errId, msg, check }) => {
     const el  = document.getElementById(id);
@@ -956,6 +984,8 @@ async function guardarEdicion() {
     telefono:    parseInt(document.getElementById("edit-telefono").value.replace(/\s/g, ""), 10),
     edad:        parseInt(document.getElementById("edit-edad").value, 10),
     producto:    document.getElementById("edit-producto").value,
+    temperatura: document.getElementById("edit-temperatura").value,
+    referencia:  document.getElementById("edit-referencia").value.trim(),
     comentarios: document.getElementById("edit-comentarios").value.trim(),
   };
 

@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -125,6 +126,10 @@
           <button class="tab" id="tab-encuesta" onclick="switchTab('encuesta')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
             Encuesta
+          </button>
+          <button class="tab" id="tab-cotizador" onclick="switchTab('cotizador')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Cotizador
           </button>
         </div>
 
@@ -436,6 +441,163 @@
         </div>
 
       </div><!-- /content-wrapper -->
+
+        <!-- ── Tab: Cotizador ── -->
+        <div id="panel-cotizador" class="tab-panel cot-panel">
+
+          <div class="cot-grid">
+
+            <!-- ── Panel izquierdo: controles ── -->
+            <div class="cot-controls-card">
+
+              <div class="cot-controls-header">
+                <div class="relative">
+                  <button onclick="cot_toggleMenuModo()" class="cot-modo-btn">
+                    <div class="cot-accent-bar"></div>
+                    <span id="cot_tituloPanel" class="cot-titulo">Panel del Asesor</span>
+                    <svg id="cot_chevronModo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="cot-chevron"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </button>
+                  <div id="cot_menuModo" class="cot-dropdown hidden">
+                    <button onclick="cot_seleccionarModo('asesor')" class="cot-dropdown-item">
+                      <span class="cot-dot cot-dot-active"></span> Panel del Asesor
+                    </button>
+                    <button onclick="cot_seleccionarModo('cliente')" class="cot-dropdown-item">
+                      <span class="cot-dot cot-dot-inactive"></span> Cotización de cliente
+                    </button>
+                  </div>
+                </div>
+                <div class="cot-counter-wrap">
+                  <button onclick="cot_cambiarIntegrantes(-1)" class="cot-counter-btn">−</button>
+                  <span id="cot_contadorDisplay" class="cot-counter-num">1</span>
+                  <button onclick="cot_cambiarIntegrantes(1)" class="cot-counter-btn">+</button>
+                </div>
+              </div>
+
+              <!-- Toggle Edad Actuarial -->
+              <div class="cot-toggle-row">
+                <div>
+                  <p class="cot-toggle-title">Edad actuarial</p>
+                  <p class="cot-toggle-sub">Calcula la edad redondeada al año más cercano</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="cot_toggleActuarial" onchange="cot_cambiarModoActuarial()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <!-- Plan global -->
+              <div class="field-group">
+                <label class="field-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                  Tipo de Plan
+                </label>
+                <div class="select-wrap">
+                  <select id="cot_planGlobal" onchange="cot_actualizarTodoPorPlan()" class="cot-select">
+                    <option value="Plan Auna salud Classic">Plan Auna salud Classic</option>
+                    <option value="Plan Auna salud Premium">Plan Auna salud Premium</option>
+                    <option value="Plan Auna salud Senior">Plan Auna salud Senior</option>
+                    <option value="Onco Pro">Onco Pro</option>
+                    <option value="Onco Plus">Onco Plus</option>
+                  </select>
+                  <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+
+              <!-- Integrantes -->
+              <div id="cot_contenedorIntegrantes" class="cot-integrantes-wrap"></div>
+
+              <!-- Fecha y beneficio -->
+              <div class="cot-extras-grid">
+                <div class="field-group">
+                  <label class="field-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Vence el:
+                  </label>
+                  <input type="date" id="cot_fechaLimite" onchange="cot_actualizarPreview()" class="cot-input-date">
+                </div>
+                <div class="field-group">
+                  <label class="field-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                    Beneficio adicional:
+                  </label>
+                  <input type="text" id="cot_beneficio" placeholder="Ej: + 1 mes gratis" oninput="cot_actualizarPreview()" class="cot-input-text">
+                </div>
+              </div>
+
+              <!-- Botones -->
+              <div id="cot_botonesAsesor" class="cot-btns">
+                <button onclick="cot_exportarCotizacion(true)" class="btn-primary cot-btn-main">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Descargar Con Descuento
+                </button>
+                <button onclick="cot_exportarCotizacion(false)" class="cot-btn-secondary">
+                  Descargar Sin Descuento
+                </button>
+              </div>
+              <div id="cot_botonesCliente" class="cot-btns hidden">
+                <button onclick="cot_exportarCotizacion(false)" class="btn-primary cot-btn-main">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Descargar Cotización
+                </button>
+              </div>
+
+            </div><!-- /cot-controls-card -->
+
+            <!-- ── Panel derecho: preview ── -->
+            <div class="cot-preview-wrap">
+              <div class="cot-preview-scaler">
+                <div id="cot_cotizacion-final" class="cot-card">
+
+                  <div class="cot-card-top">
+                    <img src="https://res.cloudinary.com/dwxiuavqd/image/upload/f_auto,q_auto/AUNA_1_cfdhdt" alt="Auna" class="cot-logo" crossorigin="anonymous">
+                    <span class="cot-badge-oficial">Cotización Oficial</span>
+                  </div>
+
+                  <div class="cot-card-subtitle">
+                    <h3>Tu bienestar y el de tu familia es nuestra prioridad 🩺💙</h3>
+                  </div>
+
+                  <div class="cot-plan-banner">
+                    <p class="cot-plan-label">Plan Protegido</p>
+                    <h4 id="cot_prev-plan">Plan Auna salud Classic</h4>
+                  </div>
+
+                  <div id="cot_lista-detallada" class="cot-lista"></div>
+
+                  <div id="cot_bloque-descuento">
+                    <div class="cot-total-box">
+                      <p class="cot-total-label">Inversión mensual total</p>
+                      <div class="cot-total-amounts">
+                        <span id="cot_total-promo" class="cot-amount-promo">S/ 0.00</span>
+                        <span id="cot_total-reg"   class="cot-amount-reg">S/ 0.00</span>
+                      </div>
+                      <div class="cot-oferta-tag">Oferta Exclusiva</div>
+                    </div>
+                    <p class="cot-vence" id="cot_texto-vence">Vence el --</p>
+                    <div id="cot_area-beneficio" class="cot-beneficio hidden">
+                      <span class="cot-beneficio-icon">🎁</span>
+                      <div>
+                        <p class="cot-beneficio-title">Beneficio Exclusivo:</p>
+                        <p id="cot_prev-beneficio" class="cot-beneficio-val"></p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="cot_bloque-regular" class="cot-total-regular hidden">
+                    <p class="cot-total-label-reg">Inversión mensual regular</p>
+                    <span id="cot_total-solo-reg" class="cot-amount-solo-reg">S/ 0.00</span>
+                  </div>
+
+                  <div class="cot-footer">
+                    <p>Tu salud en las mejores manos.</p>
+                  </div>
+
+                </div><!-- /cot-card -->
+              </div>
+            </div><!-- /cot-preview-wrap -->
+
+          </div><!-- /cot-grid -->
+        </div><!-- /panel-cotizador -->
     </main>
   </section>
 

@@ -494,26 +494,17 @@ function aplicarFiltros() {
     const fechaLead = parseFechaParaFiltro(l.fecha);
 
     if (activeQuickFilter === "hoy") {
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
-      const fin = new Date(); fin.setHours(23,59,59,999);
-      fechaOk = fechaLead ? fechaLead >= hoy && fechaLead <= fin : false;
+      const b = getLimaBounds("hoy");
+      fechaOk = fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     } else if (activeQuickFilter === "semana") {
-      const hoy  = new Date();
-      const lunes = new Date(hoy);
-      lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-      lunes.setHours(0,0,0,0);
-      const domingo = new Date(lunes);
-      domingo.setDate(lunes.getDate() + 6);
-      domingo.setHours(23,59,59,999);
-      fechaOk = fechaLead ? fechaLead >= lunes && fechaLead <= domingo : false;
+      const b = getLimaBounds("semana");
+      fechaOk = fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     } else if (activeQuickFilter === "mes") {
-      const hoy    = new Date();
-      const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
-      const fin    = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
-      fechaOk = fechaLead ? fechaLead >= inicio && fechaLead <= fin : false;
+      const b = getLimaBounds("mes");
+      fechaOk = fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     } else if (activeQuickFilter === "rango" && (desde || hasta)) {
-      if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T00:00:00");
-      if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T23:59:59");
+      if (desde && fechaLead) fechaOk = fechaOk && fechaLead >= new Date(desde + "T05:00:00Z");
+      if (hasta && fechaLead) fechaOk = fechaOk && fechaLead <= new Date(hasta + "T28:59:59Z");
       if (!fechaLead) fechaOk = false;
     }
 
@@ -525,17 +516,61 @@ function aplicarFiltros() {
 }
 
 // Parsear fecha del lead para comparación
+// Retorna un Date cuya hora local refleja la hora en Lima
 function parseFechaParaFiltro(valor) {
   if (!valor) return null;
-  const d = new Date(valor);
-  if (!isNaN(d.getTime())) return d;
-  // Intento manual: "04/08/2026 2:12 pm"
-  const m = String(valor).match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d+):(\d{2})\s*(am|pm)/i);
-  if (m) {
-    let h = parseInt(m[4], 10);
-    if (m[6].toLowerCase() === "pm" && h !== 12) h += 12;
-    if (m[6].toLowerCase() === "am" && h === 12) h = 0;
-    return new Date(parseInt(m[3]), parseInt(m[1]) - 1, parseInt(m[2]), h, parseInt(m[5]));
+
+  // Formato propio: "dd/mm/yyyy h:mm am/pm"
+  // Interpretamos los valores directamente como hora Lima → creamos Date local equivalente
+  const mDDMMYYYY = String(valor).match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(am|pm)$/i
+  );
+  if (mDDMMYYYY) {
+    const day  = parseInt(mDDMMYYYY[1], 10);
+    const mon  = parseInt(mDDMMYYYY[2], 10) - 1;
+    const yr   = parseInt(mDDMMYYYY[3], 10);
+    let   h    = parseInt(mDDMMYYYY[4], 10);
+    const min  = parseInt(mDDMMYYYY[5], 10);
+    const ampm = mDDMMYYYY[6].toLowerCase();
+    if (ampm === "pm" && h !== 12) h += 12;
+    if (ampm === "am" && h === 12) h = 0;
+    // Construir como UTC con offset Lima (-05:00) para que la comparación sea correcta
+    // Lima = UTC-5, así que sumamos 5 horas para obtener el UTC equivalente
+    return new Date(Date.UTC(yr, mon, day, h + 5, min, 0, 0));
+  }
+
+  // ISO u otro formato nativo (Google Sheets serializa como ISO)
+  const iso = new Date(valor);
+  if (!isNaN(iso.getTime())) return iso;
+
+  return null;
+}
+
+// Obtener los límites de hoy/semana/mes en UTC equivalente a Lima (UTC-5)
+function getLimaBounds(tipo) {
+  // Hora actual en Lima
+  const nowLima  = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Lima" }));
+  const yr  = nowLima.getFullYear();
+  const mon = nowLima.getMonth();
+  const day = nowLima.getDate();
+  const dow = nowLima.getDay(); // 0=dom, 1=lun...
+
+  if (tipo === "hoy") {
+    // ini = 00:00 Lima = 05:00 UTC
+    const ini = new Date(Date.UTC(yr, mon, day, 5, 0, 0, 0));
+    const fin = new Date(Date.UTC(yr, mon, day, 28, 59, 59, 999)); // 28 = 23+5
+    return { ini, fin };
+  }
+  if (tipo === "semana") {
+    const diffLunes = (dow + 6) % 7; // días desde el lunes
+    const lunes = new Date(Date.UTC(yr, mon, day - diffLunes, 5, 0, 0, 0));
+    const domingo = new Date(Date.UTC(yr, mon, day - diffLunes + 6, 28, 59, 59, 999));
+    return { ini: lunes, fin: domingo };
+  }
+  if (tipo === "mes") {
+    const ini = new Date(Date.UTC(yr, mon, 1, 5, 0, 0, 0));
+    const fin = new Date(Date.UTC(yr, mon + 1, 0, 28, 59, 59, 999));
+    return { ini, fin };
   }
   return null;
 }
@@ -601,34 +636,26 @@ function selectExportPeriod(period, btn) {
 function getLeadsFiltradosParaExportar() {
   const desde = document.getElementById("exp-desde")?.value || "";
   const hasta = document.getElementById("exp-hasta")?.value || "";
-  const hoy   = new Date();
 
   return allLeads.filter((l) => {
     const fechaLead = parseFechaParaFiltro(l.fecha);
 
     if (exportPeriod === "hoy") {
-      const ini = new Date(hoy); ini.setHours(0,0,0,0);
-      const fin = new Date(hoy); fin.setHours(23,59,59,999);
-      return fechaLead ? fechaLead >= ini && fechaLead <= fin : false;
+      const b = getLimaBounds("hoy");
+      return fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     }
     if (exportPeriod === "semana") {
-      const lunes = new Date(hoy);
-      lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-      lunes.setHours(0,0,0,0);
-      const domingo = new Date(lunes);
-      domingo.setDate(lunes.getDate() + 6);
-      domingo.setHours(23,59,59,999);
-      return fechaLead ? fechaLead >= lunes && fechaLead <= domingo : false;
+      const b = getLimaBounds("semana");
+      return fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     }
     if (exportPeriod === "mes") {
-      const ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
-      const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
-      return fechaLead ? fechaLead >= ini && fechaLead <= fin : false;
+      const b = getLimaBounds("mes");
+      return fechaLead ? fechaLead >= b.ini && fechaLead <= b.fin : false;
     }
     if (exportPeriod === "rango") {
       let ok = true;
-      if (desde && fechaLead) ok = ok && fechaLead >= new Date(desde + "T00:00:00");
-      if (hasta && fechaLead) ok = ok && fechaLead <= new Date(hasta + "T23:59:59");
+      if (desde && fechaLead) ok = ok && fechaLead >= new Date(desde + "T05:00:00Z");
+      if (hasta && fechaLead) ok = ok && fechaLead <= new Date(hasta + "T28:59:59Z");
       if (!fechaLead && (desde || hasta)) ok = false;
       return ok;
     }
@@ -722,9 +749,15 @@ function showToastExport(count) {
 ══════════════════════════════════════════════ */
 function formatFecha(valor) {
   if (!valor) return "—";
-  // Intenta parsear cualquier formato (ISO, string de texto, Date de Sheets, etc.)
+
+  // Si ya está en nuestro formato "dd/mm/yyyy h:mm am/pm", devolverlo directo
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}\s+\d{1,2}:\d{2}\s*(am|pm)$/i.test(String(valor).trim())) {
+    return String(valor).trim();
+  }
+
+  // Para fechas ISO u otros formatos que sí parsea new Date() correctamente
   const date = new Date(valor);
-  if (isNaN(date.getTime())) return valor; // Si no se puede parsear, muestra tal cual
+  if (isNaN(date.getTime())) return String(valor); // fallback: mostrar tal cual
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Lima",
     day:    "2-digit",
@@ -734,7 +767,7 @@ function formatFecha(valor) {
     minute: "2-digit",
     hour12: true,
   }).formatToParts(date);
-  const get = (t) => parts.find(p => p.type === t)?.value ?? "";
+  const get  = (t) => parts.find(p => p.type === t)?.value ?? "";
   const ampm = get("dayPeriod").toLowerCase();
   return `${get("day")}/${get("month")}/${get("year")} ${get("hour")}:${get("minute")} ${ampm}`;
 }
@@ -1230,22 +1263,17 @@ function getLeadsParaStats() {
     let fechaOk = true;
 
     if (currentStatsPeriod === "hoy") {
-      const ini = new Date(hoy); ini.setHours(0,0,0,0);
-      const fin = new Date(hoy); fin.setHours(23,59,59,999);
-      fechaOk = fl ? fl >= ini && fl <= fin : false;
+      const b = getLimaBounds("hoy");
+      fechaOk = fl ? fl >= b.ini && fl <= b.fin : false;
     } else if (currentStatsPeriod === "semana") {
-      const lun = new Date(hoy);
-      lun.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7));
-      lun.setHours(0,0,0,0);
-      const dom = new Date(lun); dom.setDate(lun.getDate() + 6); dom.setHours(23,59,59,999);
-      fechaOk = fl ? fl >= lun && fl <= dom : false;
+      const b = getLimaBounds("semana");
+      fechaOk = fl ? fl >= b.ini && fl <= b.fin : false;
     } else if (currentStatsPeriod === "mes") {
-      const ini = new Date(hoy.getFullYear(), hoy.getMonth(), 1, 0,0,0,0);
-      const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0, 23,59,59,999);
-      fechaOk = fl ? fl >= ini && fl <= fin : false;
+      const b = getLimaBounds("mes");
+      fechaOk = fl ? fl >= b.ini && fl <= b.fin : false;
     } else if (currentStatsPeriod === "rango") {
-      if (desde && fl) fechaOk = fechaOk && fl >= new Date(desde + "T00:00:00");
-      if (hasta && fl) fechaOk = fechaOk && fl <= new Date(hasta + "T23:59:59");
+      if (desde && fl) fechaOk = fechaOk && fl >= new Date(desde + "T05:00:00Z");
+      if (hasta && fl) fechaOk = fechaOk && fl <= new Date(hasta + "T28:59:59Z");
       if (!fl && (desde || hasta)) fechaOk = false;
     }
 

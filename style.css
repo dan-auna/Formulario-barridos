@@ -2405,3 +2405,586 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
   #wrap-filtro-asesor select { min-width: 120px; font-size: 0.78rem; }
 }
+
+/* ══════════════════════════════════════════════
+   COTIZADOR TAB
+══════════════════════════════════════════════ */
+
+/* Panel container */
+.cot-panel {
+  animation: fadeUp 0.3s ease;
+}
+
+/* Two-column grid */
+.cot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Left card */
+.cot-controls-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--slate-200);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cot-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cot-modo-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  width: auto;
+}
+
+.cot-accent-bar {
+  width: 4px;
+  height: 28px;
+  background: var(--blue-500);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.cot-titulo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--slate-900);
+  font-family: 'Outfit', sans-serif;
+}
+
+.cot-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--slate-400);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Dropdown */
+.cot-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: var(--white);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+  min-width: 210px;
+  overflow: hidden;
+}
+
+.cot-dropdown-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-700);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--transition);
+  margin: 0;
+  box-shadow: none;
+  font-family: 'Outfit', sans-serif;
+}
+
+.cot-dropdown-item:hover { background: var(--blue-50); color: var(--blue-600); }
+
+.cot-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cot-dot-active   { background: var(--blue-500); }
+.cot-dot-inactive { background: var(--slate-300); }
+
+/* Counter */
+.cot-counter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--slate-100);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.cot-counter-btn {
+  width: 34px; height: 34px;
+  background: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--slate-600);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition);
+  margin: 0;
+  box-shadow: var(--shadow-sm);
+  width: auto;
+  min-width: 34px;
+  padding: 0 8px;
+}
+
+.cot-counter-btn:hover { color: var(--blue-600); }
+
+.cot-counter-num {
+  padding: 0 8px;
+  font-weight: 700;
+  color: var(--blue-600);
+  font-size: 0.95rem;
+  min-width: 28px;
+  text-align: center;
+}
+
+/* Toggle row */
+.cot-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 10px 14px;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: var(--radius-md);
+}
+
+.cot-toggle-title { font-size: 0.85rem; font-weight: 700; color: var(--slate-700); }
+.cot-toggle-sub   { font-size: 0.72rem; color: var(--slate-400); margin-top: 1px; }
+
+/* Select */
+.cot-select {
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  color: var(--slate-900);
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 36px 10px 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+  -webkit-appearance: none;
+}
+
+.cot-select:focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(0,123,195,0.12); }
+
+/* Integrantes */
+.cot-integrantes-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cot-integrante-box {
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.cot-integrante-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate-400);
+  margin-bottom: 2px;
+}
+
+.cot-integrante-label.cyan { color: var(--blue-500); }
+
+.cot-col-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; align-items: end; }
+.cot-col-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: end; }
+
+.cot-input-edad,
+.cot-input-date-nac {
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--slate-900);
+  background: var(--white);
+  border: 1.5px solid #a5f3fc;
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  -webkit-appearance: none;
+}
+
+.cot-input-edad:focus,
+.cot-input-date-nac:focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(0,123,195,0.12); }
+
+.cot-input-locked {
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  background: var(--slate-100);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--slate-500);
+  cursor: not-allowed;
+}
+
+.cot-input-locked.cyan { color: var(--blue-600); font-weight: 700; background: var(--blue-50); border-color: var(--blue-100); }
+
+.cot-edad-actuarial-display {
+  width: 100%;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--blue-50);
+  border: 1.5px solid var(--blue-100);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--blue-600);
+}
+
+.cot-error {
+  font-size: 0.72rem;
+  color: var(--red-500);
+  font-weight: 600;
+  font-style: italic;
+  min-height: 14px;
+}
+
+/* Extras grid */
+.cot-extras-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.cot-input-date,
+.cot-input-text {
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--slate-900);
+  background: var(--slate-50);
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color var(--transition);
+  -webkit-appearance: none;
+}
+
+.cot-input-date:focus,
+.cot-input-text:focus { border-color: var(--blue-500); box-shadow: 0 0 0 3px rgba(0,123,195,0.12); }
+
+/* Buttons */
+.cot-btns { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.cot-btn-main {
+  font-size: 0.9rem;
+  padding: 13px 16px;
+  gap: 7px;
+  margin: 0;
+}
+
+.cot-btn-main svg { width: 17px; height: 17px; }
+
+.cot-btn-secondary {
+  width: 100%;
+  background: var(--slate-700);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 11px 16px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+  margin: 0;
+  box-shadow: none;
+}
+
+.cot-btn-secondary:hover { background: var(--slate-900); }
+
+/* Preview side */
+.cot-preview-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cot-preview-scaler {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transform-origin: top center;
+}
+
+/* The actual quote card (fixed 450px for export) */
+.cot-card {
+  background: #ffffff;
+  width: 450px;
+  min-width: 450px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,172,193,0.15);
+  border: 1px solid #f0f0f0;
+  font-family: 'Outfit', sans-serif;
+}
+
+.cot-card-top {
+  padding: 24px 28px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cot-logo { height: 36px; }
+
+.cot-badge-oficial {
+  background: #ecfeff;
+  color: #0e7490;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid #a5f3fc;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cot-card-subtitle {
+  padding: 10px 28px 14px;
+}
+
+.cot-card-subtitle h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.cot-plan-banner {
+  margin: 0 28px 20px;
+  padding: 14px 18px;
+  background: #00acc1;
+  border-radius: 16px;
+  color: white;
+}
+
+.cot-plan-label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 3px;
+}
+
+.cot-plan-banner h4 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Lista integrantes en la tarjeta */
+.cot-lista {
+  padding: 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cot-lista-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 8px;
+}
+
+.cot-lista-item:last-child { border-bottom: none; }
+
+.cot-lista-name { color: #475569; font-weight: 500; }
+
+.cot-lista-reg-through {
+  font-size: 0.7rem;
+  text-decoration: line-through;
+  color: #cbd5e1;
+  display: block;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cot-lista-promo {
+  font-weight: 700;
+  color: #00acc1;
+  white-space: nowrap;
+}
+
+.cot-lista-reg-only {
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* Total con descuento */
+.cot-total-box {
+  margin: 24px 28px 0;
+  padding: 20px 22px;
+  background: #0f172a;
+  border-radius: 20px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.cot-total-label {
+  font-size: 0.72rem;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
+.cot-total-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  white-space: nowrap;
+}
+
+.cot-amount-promo {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #00acc1;
+  white-space: nowrap;
+}
+
+.cot-amount-reg {
+  font-size: 0.82rem;
+  text-decoration: line-through;
+  opacity: 0.35;
+  white-space: nowrap;
+}
+
+.cot-oferta-tag {
+  display: inline-block;
+  margin-top: 10px;
+  background: #b0d235;
+  color: #000;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cot-vence {
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 0 4px;
+}
+
+.cot-beneficio {
+  margin: 0 28px 20px;
+  padding: 10px 14px;
+  background: #fffbeb;
+  border: 1px dashed #fcd34d;
+  border-radius: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cot-beneficio-icon { font-size: 1.4rem; line-height: 1; }
+.cot-beneficio-title { font-size: 0.65rem; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: 0.05em; }
+.cot-beneficio-val   { font-size: 0.75rem; color: #451a03; font-weight: 500; margin-top: 2px; }
+
+/* Total sin descuento */
+.cot-total-regular {
+  margin: 24px 28px 0;
+  padding: 20px 22px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.cot-total-label-reg {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.cot-amount-solo-reg {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+/* Footer de la tarjeta */
+.cot-footer {
+  background: #00acc1;
+  padding: 14px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.cot-footer p {
+  font-size: 0.82rem;
+  color: white;
+  font-weight: 700;
+}
+
+/* Responsive cotizador */
+@media (max-width: 900px) {
+  .cot-grid { grid-template-columns: 1fr; }
+  .cot-preview-scaler { transform: scale(0.88); margin-bottom: -40px; }
+}
+
+@media (max-width: 520px) {
+  .cot-preview-scaler { transform: scale(0.72); margin-bottom: -100px; }
+  .cot-extras-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 400px) {
+  .cot-preview-scaler { transform: scale(0.60); margin-bottom: -155px; }
+}

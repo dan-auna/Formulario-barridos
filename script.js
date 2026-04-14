@@ -229,6 +229,7 @@ function switchTab(tab) {
 
   if (tab === "records")  verRegistros();
   if (tab === "encuesta") iniciarEncuesta();
+  if (tab === "cotizador") cot_init();
 }
 
 /* ══════════════════════════════════════════════
@@ -1706,4 +1707,370 @@ function dibujarGrafica(diasOrdenados) {
       },
     },
   });
+}
+
+
+
+
+/* ══════════════════════════════════════════════
+   COTIZADOR — lógica completa (prefijo cot_)
+══════════════════════════════════════════════ */
+const COT_TARIFARIO = [
+  { plan:"Plan Auna salud Classic", rango:[0,17],   reg:130.3,   prom:84.68 },
+  { plan:"Plan Auna salud Classic", rango:[18,25],  reg:154.72,  prom:100.55 },
+  { plan:"Plan Auna salud Classic", rango:[26,35],  reg:172.63,  prom:112.19 },
+  { plan:"Plan Auna salud Classic", rango:[36,40],  reg:192.19,  prom:124.9 },
+  { plan:"Plan Auna salud Classic", rango:[41,45],  reg:254.08,  prom:165.13 },
+  { plan:"Plan Auna salud Classic", rango:[46,50],  reg:298.02,  prom:193.69 },
+  { plan:"Plan Auna salud Classic", rango:[51,55],  reg:387.61,  prom:251.91 },
+  { plan:"Plan Auna salud Classic", rango:[56,60],  reg:464.15,  prom:301.66 },
+  { plan:"Plan Auna salud Premium", rango:[0,17],   reg:234.3,   prom:140.56 },
+  { plan:"Plan Auna salud Premium", rango:[18,25],  reg:279.58,  prom:167.71 },
+  { plan:"Plan Auna salud Premium", rango:[26,35],  reg:311.89,  prom:187.1 },
+  { plan:"Plan Auna salud Premium", rango:[36,40],  reg:347.46,  prom:208.45 },
+  { plan:"Plan Auna salud Premium", rango:[41,45],  reg:457.36,  prom:274.37 },
+  { plan:"Plan Auna salud Premium", rango:[46,50],  reg:538.16,  prom:322.85 },
+  { plan:"Plan Auna salud Premium", rango:[51,55],  reg:630.3,   prom:378.12 },
+  { plan:"Plan Auna salud Premium", rango:[56,60],  reg:678.77,  prom:407.19 },
+  { plan:"Plan Auna salud Senior",  rango:[61,65],  reg:707.17,  prom:494.95 },
+  { plan:"Plan Auna salud Senior",  rango:[66,70],  reg:858.24,  prom:600.68 },
+  { plan:"Plan Auna salud Senior",  rango:[71,75],  reg:983.6,   prom:688.42 },
+  { plan:"Plan Auna salud Senior",  rango:[76,80],  reg:1129.85, prom:790.78 },
+  { plan:"Plan Auna salud Senior",  rango:[81,120], reg:1314.66, prom:920.13 },
+  { plan:"Onco Pro", rango:[0,17],   reg:43.91,  prom:35.12 },
+  { plan:"Onco Pro", rango:[18,25],  reg:47.03,  prom:37.62 },
+  { plan:"Onco Pro", rango:[26,26],  reg:78.92,  prom:39.45 },
+  { plan:"Onco Pro", rango:[27,35],  reg:90.38,  prom:45.18 },
+  { plan:"Onco Pro", rango:[36,40],  reg:92.26,  prom:46.13 },
+  { plan:"Onco Pro", rango:[41,41],  reg:99.82,  prom:49.9 },
+  { plan:"Onco Pro", rango:[42,43],  reg:102.7,  prom:51.34 },
+  { plan:"Onco Pro", rango:[44,45],  reg:104.58, prom:52.29 },
+  { plan:"Onco Pro", rango:[46,46],  reg:112.29, prom:56.13 },
+  { plan:"Onco Pro", rango:[47,47],  reg:113.75, prom:56.86 },
+  { plan:"Onco Pro", rango:[48,48],  reg:115.04, prom:57.51 },
+  { plan:"Onco Pro", rango:[49,49],  reg:120.53, prom:60.25 },
+  { plan:"Onco Pro", rango:[50,50],  reg:130.1,  prom:65.03 },
+  { plan:"Onco Pro", rango:[51,51],  reg:141.12, prom:70.54 },
+  { plan:"Onco Pro", rango:[52,52],  reg:156.85, prom:78.41 },
+  { plan:"Onco Pro", rango:[53,53],  reg:169.01, prom:84.49 },
+  { plan:"Onco Pro", rango:[54,54],  reg:176.41, prom:88.19 },
+  { plan:"Onco Pro", rango:[55,55],  reg:186.44, prom:93.2 },
+  { plan:"Onco Pro", rango:[56,56],  reg:192.19, prom:96.08 },
+  { plan:"Onco Pro", rango:[57,57],  reg:205.9,  prom:102.93 },
+  { plan:"Onco Pro", rango:[58,58],  reg:215.63, prom:107.79 },
+  { plan:"Onco Pro", rango:[59,59],  reg:229.73, prom:114.85 },
+  { plan:"Onco Pro", rango:[60,60],  reg:243.13, prom:121.54 },
+  { plan:"Onco Pro", rango:[61,61],  reg:256.98, prom:128.47 },
+  { plan:"Onco Plus", rango:[0,17],  reg:53.58,  prom:42.86 },
+  { plan:"Onco Plus", rango:[18,25], reg:57.55,  prom:46.03 },
+  { plan:"Onco Plus", rango:[26,26], reg:131.72, prom:65.84 },
+  { plan:"Onco Plus", rango:[27,35], reg:153.99, prom:76.98 },
+  { plan:"Onco Plus", rango:[36,36], reg:160.49, prom:80.23 },
+  { plan:"Onco Plus", rango:[37,37], reg:165.38, prom:82.67 },
+  { plan:"Onco Plus", rango:[38,38], reg:166.97, prom:83.47 },
+  { plan:"Onco Plus", rango:[39,39], reg:169.01, prom:84.49 },
+  { plan:"Onco Plus", rango:[40,40], reg:171.3,  prom:85.63 },
+  { plan:"Onco Plus", rango:[41,41], reg:175.43, prom:87.7 },
+  { plan:"Onco Plus", rango:[42,42], reg:178.48, prom:89.22 },
+  { plan:"Onco Plus", rango:[43,43], reg:186,    prom:92.98 },
+  { plan:"Onco Plus", rango:[44,44], reg:188.52, prom:94.23 },
+  { plan:"Onco Plus", rango:[45,45], reg:193.85, prom:96.9 },
+  { plan:"Onco Plus", rango:[46,46], reg:201.98, prom:100.97 },
+  { plan:"Onco Plus", rango:[47,47], reg:208.23, prom:104.1 },
+  { plan:"Onco Plus", rango:[48,48], reg:215.93, prom:107.95 },
+  { plan:"Onco Plus", rango:[49,49], reg:220.58, prom:110.27 },
+  { plan:"Onco Plus", rango:[50,50], reg:234.15, prom:117.06 },
+  { plan:"Onco Plus", rango:[51,51], reg:235.96, prom:117.96 },
+  { plan:"Onco Plus", rango:[52,52], reg:243.14, prom:121.54 },
+  { plan:"Onco Plus", rango:[53,53], reg:247.21, prom:123.58 },
+  { plan:"Onco Plus", rango:[54,54], reg:250.51, prom:125.23 },
+  { plan:"Onco Plus", rango:[55,55], reg:261.42, prom:130.69 },
+  { plan:"Onco Plus", rango:[56,56], reg:276.39, prom:138.17 },
+  { plan:"Onco Plus", rango:[57,57], reg:287.44, prom:143.69 },
+  { plan:"Onco Plus", rango:[58,58], reg:306.17, prom:153.06 },
+  { plan:"Onco Plus", rango:[59,59], reg:321.77, prom:160.86 },
+  { plan:"Onco Plus", rango:[60,60], reg:337.16, prom:168.55 },
+];
+
+let cot_modoPanel     = "asesor";
+let cot_currentInt    = 1;
+let cot_modoActuarial = false;
+let cot_initialised   = false;
+
+function cot_init() {
+  if (cot_initialised) return;
+  cot_initialised = true;
+  const hoy = new Date().toISOString().split("T")[0];
+  document.getElementById("cot_fechaLimite").value = hoy;
+  cot_renderizarCampos();
+}
+
+function cot_calcularEdadActuarial(fechaNac) {
+  if (!fechaNac) return null;
+  const hoy = new Date();
+  const nac = new Date(fechaNac + "T00:00:00");
+  if (isNaN(nac)) return null;
+  let años = hoy.getFullYear() - nac.getFullYear();
+  const yaCompleto = hoy.getMonth() > nac.getMonth() ||
+    (hoy.getMonth() === nac.getMonth() && hoy.getDate() >= nac.getDate());
+  if (!yaCompleto) años--;
+  let ultimo = new Date(hoy.getFullYear(), nac.getMonth(), nac.getDate());
+  if (!yaCompleto) ultimo = new Date(hoy.getFullYear() - 1, nac.getMonth(), nac.getDate());
+  const proximo = new Date(ultimo); proximo.setFullYear(proximo.getFullYear() + 1);
+  const fraccion = (hoy - ultimo) / (proximo - ultimo);
+  return Math.round(años + fraccion);
+}
+
+function cot_cambiarModoActuarial() {
+  cot_modoActuarial = document.getElementById("cot_toggleActuarial").checked;
+  cot_renderizarCampos();
+}
+
+function cot_toggleMenuModo() {
+  const menu    = document.getElementById("cot_menuModo");
+  const chevron = document.getElementById("cot_chevronModo");
+  menu.classList.toggle("hidden");
+  chevron.style.transform = menu.classList.contains("hidden") ? "" : "rotate(180deg)";
+}
+
+function cot_seleccionarModo(modo) {
+  cot_modoPanel = modo;
+  document.getElementById("cot_menuModo").classList.add("hidden");
+  document.getElementById("cot_chevronModo").style.transform = "";
+  document.getElementById("cot_tituloPanel").textContent =
+    modo === "asesor" ? "Panel del Asesor" : "Cotización de cliente";
+  document.getElementById("cot_botonesAsesor").classList.toggle("hidden", modo !== "asesor");
+  document.getElementById("cot_botonesCliente").classList.toggle("hidden", modo !== "cliente");
+  cot_renderizarCampos();
+}
+
+function cot_cambiarIntegrantes(delta) {
+  const nuevo = cot_currentInt + delta;
+  if (nuevo < 1 || nuevo > 4) return;
+  cot_currentInt = nuevo;
+  document.getElementById("cot_contadorDisplay").textContent = cot_currentInt;
+  cot_renderizarCampos();
+}
+
+function cot_renderizarCampos() {
+  const wrap = document.getElementById("cot_contenedorIntegrantes");
+  const vals = [];
+  for (let i = 1; i <= 4; i++) vals.push({
+    edad: document.getElementById("cot_edad-" + i)?.value || "",
+    fnac: document.getElementById("cot_fnac-" + i)?.value || "",
+    reg:  document.getElementById("cot_reg-"  + i)?.value || "0.00",
+    prom: document.getElementById("cot_prom-" + i)?.value || "0.00",
+  });
+
+  wrap.innerHTML = "";
+  const esCliente = cot_modoPanel === "cliente";
+
+  for (let i = 1; i <= cot_currentInt; i++) {
+    const v = vals[i - 1];
+    let html = '<div class="cot-integrante-box">';
+
+    if (cot_modoActuarial) {
+      html += '<div><p class="cot-integrante-label">Fecha de Nacimiento</p>'
+            + '<input type="date" id="cot_fnac-' + i + '" value="' + v.fnac + '" oninput="cot_autocompletarPrecios(' + i + ')" class="cot-input-date-nac"></div>';
+      if (esCliente) {
+        html += '<div class="cot-col-grid-2">'
+              + '<div><p class="cot-integrante-label cyan">Edad Actuarial</p>'
+              + '<div class="cot-edad-actuarial-display"><span id="cot_edad-display-' + i + '">--</span></div></div>'
+              + '<div><p class="cot-integrante-label">Regular</p>'
+              + '<input type="text" id="cot_reg-' + i + '" value="' + v.reg + '" readonly class="cot-input-locked"></div>'
+              + '</div><input type="hidden" id="cot_prom-' + i + '" value="' + v.prom + '">';
+      } else {
+        html += '<div class="cot-col-grid-3">'
+              + '<div><p class="cot-integrante-label cyan">Edad Actuarial</p>'
+              + '<div class="cot-edad-actuarial-display"><span id="cot_edad-display-' + i + '">--</span></div></div>'
+              + '<div><p class="cot-integrante-label">Regular</p>'
+              + '<input type="text" id="cot_reg-' + i + '" value="' + v.reg + '" readonly class="cot-input-locked"></div>'
+              + '<div><p class="cot-integrante-label cyan">Promo</p>'
+              + '<input type="text" id="cot_prom-' + i + '" value="' + v.prom + '" readonly class="cot-input-locked cyan"></div>'
+              + '</div>';
+      }
+    } else {
+      if (esCliente) {
+        html += '<div class="cot-col-grid-2">'
+              + '<div><p class="cot-integrante-label">Edad</p>'
+              + '<input type="text" inputmode="numeric" id="cot_edad-' + i + '" value="' + v.edad + '" oninput="cot_autocompletarPrecios(' + i + ')" placeholder="Ej: 35" class="cot-input-edad"></div>'
+              + '<div><p class="cot-integrante-label">Regular</p>'
+              + '<input type="text" id="cot_reg-' + i + '" value="' + v.reg + '" readonly class="cot-input-locked"></div>'
+              + '</div><input type="hidden" id="cot_prom-' + i + '" value="' + v.prom + '">';
+      } else {
+        html += '<div class="cot-col-grid-3">'
+              + '<div><p class="cot-integrante-label">Edad</p>'
+              + '<input type="text" inputmode="numeric" id="cot_edad-' + i + '" value="' + v.edad + '" oninput="cot_autocompletarPrecios(' + i + ')" placeholder="Ej: 35" class="cot-input-edad"></div>'
+              + '<div><p class="cot-integrante-label">Regular</p>'
+              + '<input type="text" id="cot_reg-' + i + '" value="' + v.reg + '" readonly class="cot-input-locked"></div>'
+              + '<div><p class="cot-integrante-label cyan">Promo</p>'
+              + '<input type="text" id="cot_prom-' + i + '" value="' + v.prom + '" readonly class="cot-input-locked cyan"></div>'
+              + '</div>';
+      }
+    }
+    html += '<p id="cot_error-' + i + '" class="cot-error"></p></div>';
+    wrap.innerHTML += html;
+  }
+
+  if (cot_modoActuarial) {
+    for (let i = 1; i <= cot_currentInt; i++) {
+      if (vals[i - 1].fnac) cot_autocompletarPrecios(i);
+    }
+  }
+  cot_actualizarPreview();
+}
+
+function cot_autocompletarPrecios(id) {
+  const plan    = document.getElementById("cot_planGlobal").value;
+  const regEl   = document.getElementById("cot_reg-"   + id);
+  const promEl  = document.getElementById("cot_prom-"  + id);
+  const errorEl = document.getElementById("cot_error-" + id);
+  if (!errorEl) return;
+  errorEl.textContent = "";
+
+  let edad;
+  if (cot_modoActuarial) {
+    const fnac = document.getElementById("cot_fnac-" + id)?.value;
+    if (!fnac) { regEl.value = "0.00"; promEl.value = "0.00"; cot_actualizarPreview(); return; }
+    edad = cot_calcularEdadActuarial(fnac);
+    if (edad === null) { regEl.value = "0.00"; promEl.value = "0.00"; cot_actualizarPreview(); return; }
+    const disp = document.getElementById("cot_edad-display-" + id);
+    if (disp) disp.textContent = edad + " años";
+  } else {
+    const eStr = document.getElementById("cot_edad-" + id)?.value || "";
+    edad = parseInt(eStr.replace(/\D/g, ""));
+    if (isNaN(edad)) { regEl.value = "0.00"; promEl.value = "0.00"; cot_actualizarPreview(); return; }
+  }
+
+  let valid = true;
+  if (plan === "Plan Auna salud Senior") {
+    if (edad <= 60) { errorEl.textContent = "Mínimo 61 años"; valid = false; }
+  } else {
+    if (edad > 60) { errorEl.textContent = "Máximo 60 años"; valid = false; }
+  }
+
+  if (valid) {
+    const match = COT_TARIFARIO.find(t => t.plan === plan && edad >= t.rango[0] && edad <= t.rango[1]);
+    regEl.value  = match ? match.reg.toFixed(2)  : "0.00";
+    promEl.value = match ? match.prom.toFixed(2) : "0.00";
+  } else {
+    regEl.value = "0.00"; promEl.value = "0.00";
+  }
+  cot_actualizarPreview();
+}
+
+function cot_actualizarTodoPorPlan() {
+  for (let i = 1; i <= cot_currentInt; i++) cot_autocompletarPrecios(i);
+}
+
+function cot_formatearFecha(str) {
+  if (!str) return "fin de mes";
+  return new Date(str + "T12:00:00").toLocaleDateString("es-ES", { day: "numeric", month: "long" });
+}
+
+function cot_actualizarPreview() {
+  const esCliente = cot_modoPanel === "cliente";
+  const planEl = document.getElementById("cot_planGlobal");
+  if (!planEl) return;
+  document.getElementById("cot_prev-plan").textContent = planEl.value;
+
+  const fechaStr = document.getElementById("cot_fechaLimite").value;
+  document.getElementById("cot_texto-vence").textContent = "Vence el " + cot_formatearFecha(fechaStr);
+
+  const beneficio = document.getElementById("cot_beneficio").value.trim();
+  const areaBenef = document.getElementById("cot_area-beneficio");
+  if (beneficio) {
+    areaBenef.classList.remove("hidden");
+    document.getElementById("cot_prev-beneficio").textContent = beneficio;
+  } else {
+    areaBenef.classList.add("hidden");
+  }
+
+  document.getElementById("cot_bloque-descuento").classList.toggle("hidden", esCliente);
+  document.getElementById("cot_bloque-regular").classList.toggle("hidden",   !esCliente);
+
+  let tR = 0, tP = 0;
+  const lista = document.getElementById("cot_lista-detallada");
+  lista.innerHTML = "";
+
+  for (let i = 1; i <= cot_currentInt; i++) {
+    let etiquetaEdad;
+    if (cot_modoActuarial) {
+      const disp = document.getElementById("cot_edad-display-" + i);
+      etiquetaEdad = disp ? disp.textContent : "?";
+      if (etiquetaEdad === "--") etiquetaEdad = "? años";
+    } else {
+      const e = document.getElementById("cot_edad-" + i)?.value || "?";
+      etiquetaEdad = e + " años";
+    }
+    const r = parseFloat(document.getElementById("cot_reg-"  + i)?.value || 0);
+    const p = parseFloat(document.getElementById("cot_prom-" + i)?.value || 0);
+    tR += r; tP += p;
+
+    if (esCliente) {
+      lista.innerHTML += '<div class="cot-lista-item">'
+        + '<span class="cot-lista-name">Integrante ' + i + ' (' + etiquetaEdad + ')</span>'
+        + '<span class="cot-lista-reg-only cot-price-reg-val">S/ ' + r.toFixed(2) + '</span>'
+        + '</div>';
+    } else {
+      lista.innerHTML += '<div class="cot-lista-item">'
+        + '<span class="cot-lista-name">Integrante ' + i + ' (' + etiquetaEdad + ')</span>'
+        + '<div style="text-align:right">'
+        + '<span class="cot-lista-reg-through cot-price-reg-val">S/ ' + r.toFixed(2) + '</span>'
+        + '<span class="cot-lista-promo cot-price-promo-val">S/ ' + p.toFixed(2) + '</span>'
+        + '</div></div>';
+    }
+  }
+
+  document.getElementById("cot_total-reg").textContent      = "S/ " + tR.toFixed(2);
+  document.getElementById("cot_total-promo").textContent    = "S/ " + tP.toFixed(2);
+  document.getElementById("cot_total-solo-reg").textContent = "S/ " + tR.toFixed(2);
+}
+
+async function cot_exportarCotizacion(conDescuento) {
+  const card          = document.getElementById("cot_cotizacion-final");
+  const bloqDesc      = document.getElementById("cot_bloque-descuento");
+  const bloqReg       = document.getElementById("cot_bloque-regular");
+  const precios_reg   = card.querySelectorAll(".cot-price-reg-val");
+  const precios_promo = card.querySelectorAll(".cot-price-promo-val");
+
+  if (!conDescuento) {
+    bloqDesc.classList.add("hidden");
+    bloqReg.classList.remove("hidden");
+    precios_reg.forEach(el => {
+      el.classList.remove("cot-lista-reg-through");
+      el.classList.add("cot-lista-reg-only");
+    });
+    precios_promo.forEach(el => el.classList.add("hidden"));
+  }
+
+  try {
+    if (typeof htmlToImage === "undefined") {
+      alert("La librería de exportación no está cargada aún. Espera un momento y vuelve a intentarlo.");
+      return;
+    }
+    const dataUrl = await htmlToImage.toJpeg(card, {
+      quality: 0.95, pixelRatio: 2, width: 450, backgroundColor: "#ffffff",
+    });
+    const link = document.createElement("a");
+    link.download = conDescuento ? "Cotizacion_Promo.jpg" : "Cotizacion_Regular.jpg";
+    link.href = dataUrl.replace("image/jpeg", "image/octet-stream");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error("Error exportando:", err);
+    alert("Hubo un error al generar la imagen.");
+  } finally {
+    bloqDesc.classList.remove("hidden");
+    bloqReg.classList.add("hidden");
+    precios_reg.forEach(el => {
+      if (cot_modoPanel !== "cliente") {
+        el.classList.add("cot-lista-reg-through");
+        el.classList.remove("cot-lista-reg-only");
+      }
+    });
+    precios_promo.forEach(el => el.classList.remove("hidden"));
+    cot_actualizarPreview();
+  }
 }

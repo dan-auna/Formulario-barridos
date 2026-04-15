@@ -1821,8 +1821,26 @@ function cot_calcularEdadActuarial(fechaNac) {
   return Math.round(años + fraccion);
 }
 
+function cot_toggleActuarial() {
+  cot_modoActuarial = !cot_modoActuarial;
+  const btn    = document.getElementById("cot_btnActuarial");
+  const status = document.getElementById("cot_actuarial-status");
+  if (cot_modoActuarial) {
+    btn.classList.add("active");
+    status.textContent = "Activado";
+    status.classList.remove("off");
+    status.classList.add("on");
+  } else {
+    btn.classList.remove("active");
+    status.textContent = "Desactivado";
+    status.classList.remove("on");
+    status.classList.add("off");
+  }
+  cot_renderizarCampos();
+}
+
 function cot_cambiarModoActuarial() {
-  cot_modoActuarial = document.getElementById("cot_toggleActuarial").checked;
+  cot_modoActuarial = document.getElementById("cot_toggleActuarial")?.checked || false;
   cot_renderizarCampos();
 }
 
@@ -2074,3 +2092,16 @@ async function cot_exportarCotizacion(conDescuento) {
     cot_actualizarPreview();
   }
 }
+
+// Cerrar dropdown del cotizador al hacer clic fuera
+document.addEventListener("click", (e) => {
+  const menu    = document.getElementById("cot_menuModo");
+  const trigger = document.getElementById("cot_tituloPanel")?.closest("button");
+  if (menu && !menu.classList.contains("hidden")) {
+    if (!menu.contains(e.target) && (!trigger || !trigger.contains(e.target))) {
+      menu.classList.add("hidden");
+      const chevron = document.getElementById("cot_chevronModo");
+      if (chevron) chevron.style.transform = "";
+    }
+  }
+});

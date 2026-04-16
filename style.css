@@ -50,6 +50,9 @@
 
 html { scroll-behavior: smooth; }
 
+/* Utility: replaces Tailwind's .hidden since we don't use Tailwind */
+.hidden { display: none !important; }
+
 body {
   font-family: 'Outfit', sans-serif;
   background: var(--slate-100);

@@ -2481,6 +2481,11 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   flex-shrink: 0;
 }
 
+/* Dropdown wrapper — needs position:relative so the absolute dropdown positions correctly */
+.cot-controls-header > div:first-child {
+  position: relative;
+}
+
 /* Dropdown */
 .cot-dropdown {
   position: absolute;

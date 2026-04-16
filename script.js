@@ -2009,7 +2009,7 @@ function cot_actualizarPreview() {
 
   let tR = 0, tP = 0;
   const lista = document.getElementById("cot_lista-detallada");
-  lista.innerHTML = "";
+  lista.innerHTML = ""; // full re-render, no stale classes
 
   for (let i = 1; i <= cot_currentInt; i++) {
     let etiquetaEdad;
@@ -2049,17 +2049,23 @@ async function cot_exportarCotizacion(conDescuento) {
   const card          = document.getElementById("cot_cotizacion-final");
   const bloqDesc      = document.getElementById("cot_bloque-descuento");
   const bloqReg       = document.getElementById("cot_bloque-regular");
-  const precios_reg   = card.querySelectorAll(".cot-price-reg-val");
-  const precios_promo = card.querySelectorAll(".cot-price-promo-val");
+  const esCliente     = cot_modoPanel === "cliente";
 
-  if (!conDescuento) {
+  // Preparar la tarjeta para la exportación según qué botón se pulsó
+  if (conDescuento) {
+    // Asesor con descuento: bloque promo visible, bloque regular oculto
+    bloqDesc.classList.remove("hidden");
+    bloqReg.classList.add("hidden");
+  } else {
+    // Sin descuento (asesor o cliente): solo precio regular
     bloqDesc.classList.add("hidden");
     bloqReg.classList.remove("hidden");
-    precios_reg.forEach(el => {
+    // Ocultar precios tachados y mostrar solo el regular en cada fila
+    card.querySelectorAll(".cot-price-reg-val").forEach(el => {
       el.classList.remove("cot-lista-reg-through");
       el.classList.add("cot-lista-reg-only");
     });
-    precios_promo.forEach(el => el.classList.add("hidden"));
+    card.querySelectorAll(".cot-price-promo-val").forEach(el => el.classList.add("hidden"));
   }
 
   try {
@@ -2080,15 +2086,7 @@ async function cot_exportarCotizacion(conDescuento) {
     console.error("Error exportando:", err);
     alert("Hubo un error al generar la imagen.");
   } finally {
-    bloqDesc.classList.remove("hidden");
-    bloqReg.classList.add("hidden");
-    precios_reg.forEach(el => {
-      if (cot_modoPanel !== "cliente") {
-        el.classList.add("cot-lista-reg-through");
-        el.classList.remove("cot-lista-reg-only");
-      }
-    });
-    precios_promo.forEach(el => el.classList.remove("hidden"));
+    // Restaurar el preview al estado correcto según el modo activo
     cot_actualizarPreview();
   }
 }
@@ -2096,12 +2094,16 @@ async function cot_exportarCotizacion(conDescuento) {
 // Cerrar dropdown del cotizador al hacer clic fuera
 document.addEventListener("click", (e) => {
   const menu    = document.getElementById("cot_menuModo");
-  const trigger = document.getElementById("cot_tituloPanel")?.closest("button");
-  if (menu && !menu.classList.contains("hidden")) {
-    if (!menu.contains(e.target) && (!trigger || !trigger.contains(e.target))) {
-      menu.classList.add("hidden");
-      const chevron = document.getElementById("cot_chevronModo");
-      if (chevron) chevron.style.transform = "";
-    }
+  if (!menu) return;
+  // Si el menú está oculto, no hacer nada
+  if (menu.classList.contains("hidden")) return;
+  // El trigger es el botón que contiene cot_tituloPanel
+  const trigger = document.querySelector(".cot-modo-btn");
+  const clickDentroMenu    = menu.contains(e.target);
+  const clickDentroTrigger = trigger && trigger.contains(e.target);
+  if (!clickDentroMenu && !clickDentroTrigger) {
+    menu.classList.add("hidden");
+    const chevron = document.getElementById("cot_chevronModo");
+    if (chevron) chevron.style.transform = "";
   }
 });

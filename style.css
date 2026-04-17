@@ -3350,3 +3350,11 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   .wa-edit-actions { flex-direction: column-reverse; }
   .wa-edit-actions .btn-cancel, .wa-edit-actions .wa-btn-guardar { width: 100%; justify-content: center; }
 }
+
+/* WhatsApp modal loading state */
+.wa-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}

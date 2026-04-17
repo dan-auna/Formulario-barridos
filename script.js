@@ -208,13 +208,71 @@ function mostrarPantallaFormulario(user) {
 ══════════════════════════════════════════════ */
 function logout() {
   borrarSesion();
+
+  // ── Resetear todo el estado en memoria ──
+  allLeads           = [];
+  currentPage        = 1;
+  activeQuickFilter  = "todos";
+  currentStatsPeriod = "mes";
+  calMesAsesor       = null;
+  exportPeriod       = "todos";
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  if (qrInstance)    { qrInstance = null; }
+  cot_initialised    = false;
+  cot_modoPanel      = "asesor";
+  cot_currentInt     = 1;
+  cot_modoActuarial  = false;
+
+  // ── Resetear UI de registros al estado inicial ──
+  const tablaEl = document.getElementById("tabla-registros");
+  if (tablaEl) tablaEl.innerHTML = `
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      <p>Haz clic en <strong>Actualizar</strong> para cargar tus registros.</p>
+    </div>`;
+  const recordsSub = document.getElementById("records-sub");
+  if (recordsSub) recordsSub.textContent = "Historial de leads registrados";
+
+  // ── Ocultar controles de admin ──
+  const wrapAsesor = document.getElementById("wrap-filtro-asesor");
+  const btnStats   = document.getElementById("btn-ir-stats");
+  const wrapStats  = document.getElementById("wrap-stats-asesor");
+  if (wrapAsesor) wrapAsesor.style.display = "none";
+  if (btnStats)   btnStats.style.display   = "none";
+  if (wrapStats)  wrapStats.style.display  = "none";
+
+  // ── Volver a vista lista si estaba en stats ──
+  const vistaLista = document.getElementById("vista-lista");
+  const vistaStats = document.getElementById("vista-stats");
+  if (vistaLista) vistaLista.style.display = "block";
+  if (vistaStats) vistaStats.style.display = "none";
+
+  // ── Resetear filtros rápidos ──
+  document.querySelectorAll(".qf-btn").forEach((b, i) => b.classList.toggle("active", i === 0));
+  const rangoWrap = document.getElementById("rango-wrap");
+  if (rangoWrap) rangoWrap.style.display = "none";
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) searchInput.value = "";
+  const fechaDesde = document.getElementById("fecha-desde");
+  const fechaHasta = document.getElementById("fecha-hasta");
+  if (fechaDesde) fechaDesde.value = "";
+  if (fechaHasta) fechaHasta.value = "";
+  const filtroAsesor = document.getElementById("filtro-asesor");
+  if (filtroAsesor) { filtroAsesor.innerHTML = `<option value="todos">Todos los asesores</option>`; }
+
+  // ── Volver a tab Nuevo Lead ──
+  document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+  document.getElementById("tab-form")?.classList.add("active");
+  document.getElementById("panel-form")?.classList.add("active");
+
+  // ── Reset formulario y pantalla ──
   document.getElementById("form-section").style.display  = "none";
   document.getElementById("login-section").style.display = "block";
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
   document.getElementById("login-error").style.display = "none";
   document.getElementById("barrido-form").reset();
-  allLeads = [];
 }
 
 /* ══════════════════════════════════════════════
@@ -2128,6 +2186,24 @@ async function abrirWaModal(lead) {
   document.getElementById("wa-lead-info").textContent =
     `${lead.nombre} · ${lead.producto} · +51 ${lead.telefono}`;
 
+  // Mostrar modal INMEDIATAMENTE con estado de carga
+  const overlay = document.getElementById("wa-modal-overlay");
+  overlay.style.display = "flex";
+  overlay.offsetHeight;
+  overlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  // Mostrar loading en la preview mientras carga el mensaje
+  const previewBox = document.getElementById("wa-preview-text");
+  previewBox.innerHTML = `<div class="wa-loading">
+    <span class="spinner" style="border-color:rgba(7,94,84,0.2);border-top-color:#075e54;width:20px;height:20px"></span>
+    <span style="color:#075e54;font-size:0.85rem;font-weight:600">Cargando mensaje...</span>
+  </div>`;
+
+  // Ocultar botón editar mientras carga
+  const btnEditar = document.querySelector(".wa-btn-editar");
+  if (btnEditar) btnEditar.style.visibility = "hidden";
+
   // Cargar mensaje del usuario desde Sheets
   const usuario = leerSesion()?.usuario || "";
   try {
@@ -2139,17 +2215,12 @@ async function abrirWaModal(lead) {
   }
 
   document.getElementById("wa-mensaje").value = _waMensajeBase;
-  actualizarPreviewWa();
 
-  // Arrancar en modo vista previa
+  // Mostrar botón editar ya con datos
+  if (btnEditar) btnEditar.style.visibility = "visible";
+
+  // Arrancar en modo vista previa (reemplaza el loading)
   mostrarModoPreview();
-
-  // Mostrar modal
-  const overlay = document.getElementById("wa-modal-overlay");
-  overlay.style.display = "flex";
-  overlay.offsetHeight;
-  overlay.classList.add("active");
-  document.body.style.overflow = "hidden";
 }
 
 function mostrarModoPreview() {

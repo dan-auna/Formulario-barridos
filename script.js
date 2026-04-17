@@ -2121,29 +2121,28 @@ document.addEventListener("click", (e) => {
 /* ══════════════════════════════════════════════
    WHATSAPP MODAL
 ══════════════════════════════════════════════ */
-let _waMensajeBase = ""; // mensaje guardado en Sheets
+let _waMensajeBase     = "";
+let _waMensajeAnterior = ""; // para cancelar edición
 
 async function abrirWaModal(lead) {
-  // Info del lead en el subtítulo
   document.getElementById("wa-lead-info").textContent =
-    `📋 ${lead.nombre} · ${lead.producto} · +51 ${lead.telefono}`;
+    `${lead.nombre} · ${lead.producto} · +51 ${lead.telefono}`;
 
   // Cargar mensaje del usuario desde Sheets
   const usuario = leerSesion()?.usuario || "";
   try {
-    const res = await fetch(`${URL_GOOGLE_SCRIPT}?action=getMensaje&usuario=${encodeURIComponent(usuario)}`);
+    const res  = await fetch(`${URL_GOOGLE_SCRIPT}?action=getMensaje&usuario=${encodeURIComponent(usuario)}`);
     const data = await res.json();
     _waMensajeBase = data.mensaje || "";
   } catch {
     _waMensajeBase = "";
   }
 
-  const textarea = document.getElementById("wa-mensaje");
-  textarea.value = _waMensajeBase;
+  document.getElementById("wa-mensaje").value = _waMensajeBase;
   actualizarPreviewWa();
 
-  // Escuchar cambios para actualizar preview en tiempo real
-  textarea.oninput = actualizarPreviewWa;
+  // Arrancar en modo vista previa
+  mostrarModoPreview();
 
   // Mostrar modal
   const overlay = document.getElementById("wa-modal-overlay");
@@ -2151,12 +2150,30 @@ async function abrirWaModal(lead) {
   overlay.offsetHeight;
   overlay.classList.add("active");
   document.body.style.overflow = "hidden";
-  textarea.focus();
+}
+
+function mostrarModoPreview() {
+  document.getElementById("wa-mode-preview").style.display = "block";
+  document.getElementById("wa-mode-edit").style.display    = "none";
+  actualizarPreviewWa();
+}
+
+function abrirModoEdicion() {
+  _waMensajeAnterior = document.getElementById("wa-mensaje").value; // guardar para cancelar
+  document.getElementById("wa-mode-preview").style.display = "none";
+  document.getElementById("wa-mode-edit").style.display    = "block";
+  document.getElementById("wa-mensaje").oninput = actualizarPreviewWa;
+  document.getElementById("wa-mensaje").focus();
+}
+
+function cancelarEdicion() {
+  document.getElementById("wa-mensaje").value = _waMensajeAnterior;
+  mostrarModoPreview();
 }
 
 function actualizarPreviewWa() {
-  const lead = window._ultimoLead || {};
-  const texto = document.getElementById("wa-mensaje").value
+  const lead  = window._ultimoLead || {};
+  const texto = (document.getElementById("wa-mensaje")?.value || "")
     .replace(/\{nombre\}/gi,   lead.nombre   || "")
     .replace(/\{producto\}/gi, lead.producto || "");
   document.getElementById("wa-preview-text").textContent = texto || "—";
@@ -2190,9 +2207,8 @@ async function guardarMensajeWa() {
       mode:   "no-cors",
       body:   JSON.stringify({ action: "updateMensaje", usuario, mensaje }),
     });
-    const ok = document.getElementById("wa-guardado-ok");
-    ok.style.display = "inline";
-    setTimeout(() => { ok.style.display = "none"; }, 3000);
+    // Volver a modo preview tras guardar
+    mostrarModoPreview();
   } catch {
     alert("Error al guardar el mensaje. Intenta de nuevo.");
   } finally {
@@ -2203,23 +2219,17 @@ async function guardarMensajeWa() {
 }
 
 function enviarWhatsapp() {
-  const lead    = window._ultimoLead || {};
+  const lead     = window._ultimoLead || {};
   const telefono = (lead.telefono || "").replace(/\D/g, "");
-  const numero   = "51" + telefono; // código Perú
+  const numero   = "51" + telefono;
 
-  // Reemplazar variables en el mensaje
-  const mensaje = document.getElementById("wa-mensaje").value
+  const mensaje = (document.getElementById("wa-mensaje")?.value || "")
     .replace(/\{nombre\}/gi,   lead.nombre   || "")
     .replace(/\{producto\}/gi, lead.producto || "");
 
-  if (!telefono) {
-    alert("No se encontró el número de teléfono del lead.");
-    return;
-  }
+  if (!telefono) { alert("No se encontró el número de teléfono del lead."); return; }
 
-  const urlMsg = encodeURIComponent(mensaje);
-  // wa.me funciona tanto para WhatsApp normal como WhatsApp Business
-  window.open(`https://wa.me/${numero}?text=${urlMsg}`, "_blank");
+  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`, "_blank");
 }
 
 function closeWaModal(event) {

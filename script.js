@@ -290,7 +290,43 @@ function switchTab(tab) {
   if (tab === "encuesta")   iniciarEncuesta();
   if (tab === "cotizador")  cot_init();
   if (tab === "proyeccion") proy_init();
+
+  // Sync mobile nav
+  const labels = {
+    form:       { label: "Nuevo Lead",    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>` },
+    records:    { label: "Mis Registros", svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17H5a2 2 0 0 0-2 2v2h18v-2a2 2 0 0 0-2-2h-4"/><path d="M12 3v10m-4-4 4 4 4-4"/></svg>` },
+    encuesta:   { label: "Encuesta",      svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>` },
+    cotizador:  { label: "Cotizador",     svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>` },
+    proyeccion: { label: "Proyección",    svg: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>` },
+  };
+  const info = labels[tab];
+  if (info) {
+    document.getElementById("mobile-nav-label").textContent = info.label;
+    document.getElementById("mobile-nav-icon").innerHTML    = info.svg;
+  }
+  document.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
+  document.getElementById(`mnav-${tab}`)?.classList.add("active");
 }
+
+/* ── Mobile nav ── */
+function toggleMobileNav() {
+  const menu    = document.getElementById("mobile-nav-menu");
+  const chevron = document.getElementById("mobile-nav-chevron");
+  const open    = menu.style.display !== "none" && menu.style.display !== "";
+  menu.style.display = open ? "none" : "block";
+  chevron.style.transform = open ? "" : "rotate(180deg)";
+}
+
+function closeMobileNav() {
+  document.getElementById("mobile-nav-menu").style.display = "none";
+  document.getElementById("mobile-nav-chevron").style.transform = "";
+}
+
+// Close mobile nav on outside click
+document.addEventListener("click", e => {
+  const nav = document.getElementById("mobile-nav");
+  if (nav && !nav.contains(e.target)) closeMobileNav();
+});
 
 /* ══════════════════════════════════════════════
    VALIDACIÓN
@@ -2349,9 +2385,14 @@ function proy_parsearHora(str) {
 function proy_renderFila(idx, data = {}) {
   const productos = ["Auna Classic","Auna Premium","Auna Senior","Onco Pro","Onco Plus"];
   const estados   = ["Generado","Por Vencer","Pagado","Pendiente"];
+  const horas     = [
+    "1 am","2 am","3 am","4 am","5 am","6 am","7 am","8 am","9 am","10 am","11 am","12 pm",
+    "1 pm","2 pm","3 pm","4 pm","5 pm","6 pm","7 pm","8 pm","9 pm","10 pm","11 pm","12 am"
+  ];
   const prodOpts  = productos.map(p => `<option value="${p}" ${data.producto===p?"selected":""}>${p}</option>`).join("");
   const estadOpts = estados.map(s => `<option value="${s}" ${data.estado===s?"selected":""}>${s}</option>`).join("");
   const densOpts  = [1,2,3,4].map(n => `<option value="${n}" ${data.densidad==n?"selected":""}>${n}</option>`).join("");
+  const horaOpts  = horas.map(h => `<option value="${h}" ${data.horaDisplay===h?"selected":""}>${h}</option>`).join("");
 
   return `
   <div class="proy-fila" id="proy-fila-${idx}">
@@ -2383,7 +2424,8 @@ function proy_renderFila(idx, data = {}) {
       </div>
       <div class="field-group">
         <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12"/></svg> Hora</label>
-        <input type="text" id="proy-hora-${idx}" value="${data.hora||""}" placeholder="Ej: 4 pm, 10 am" class="proy-input" maxlength="8">
+        <div class="select-wrap"><select id="proy-hora-${idx}" class="proy-select">${horaOpts}</select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
       </div>
     </div>
   </div>`;
@@ -2406,82 +2448,118 @@ function proy_leerFilas() {
   const filas = [];
   document.querySelectorAll(".proy-fila").forEach(fila => {
     const id = fila.id.replace("proy-fila-","");
+    const horaDisplay = document.getElementById("proy-hora-" + id)?.value || "1 pm";
     filas.push({
-      nombre:   document.getElementById("proy-nombre-"   + id)?.value.trim() || "",
-      densidad: document.getElementById("proy-densidad-" + id)?.value || "1",
-      producto: document.getElementById("proy-producto-" + id)?.value || "",
-      estado:   document.getElementById("proy-estado-"   + id)?.value || "",
-      hora:     proy_parsearHora(document.getElementById("proy-hora-" + id)?.value || ""),
+      nombre:       document.getElementById("proy-nombre-"   + id)?.value.trim() || "",
+      densidad:     document.getElementById("proy-densidad-" + id)?.value || "1",
+      producto:     document.getElementById("proy-producto-" + id)?.value || "",
+      estado:       document.getElementById("proy-estado-"   + id)?.value || "",
+      hora:         proy_parsearHora(horaDisplay), // "HH:00" para Sheets
+      horaDisplay:  horaDisplay,                   // "h pm" para legibilidad
     });
   });
-  return filas.filter(f => f.nombre); // ignorar filas sin nombre
+  return filas.filter(f => f.nombre);
 }
 
 async function proy_init() {
-  const rol    = leerSesion()?.rol;
+  const rol     = leerSesion()?.rol;
   const esAdmin = rol === "Administrador";
 
-  // Mostrar loading
-  document.getElementById("proy-loading").style.display       = "block";
-  document.getElementById("proy-asesor-view").style.display   = "none";
-  document.getElementById("proy-admin-view").style.display    = "none";
-  document.getElementById("proy-header-asesor").style.display = esAdmin ? "none" : "flex";
-  document.getElementById("proy-header-admin").style.display  = esAdmin ? "flex" : "none";
+  document.getElementById("proy-loading").style.display        = "block";
+  document.getElementById("proy-preview-view").style.display   = "none";
+  document.getElementById("proy-asesor-view").style.display    = "none";
+  document.getElementById("proy-admin-view").style.display     = "none";
+  document.getElementById("proy-header-asesor").style.display  = esAdmin ? "none" : "flex";
+  document.getElementById("proy-header-admin").style.display   = esAdmin ? "flex" : "none";
 
   const hoy = proy_fechaHoyLima();
-  document.getElementById("proy-fecha-sub").textContent  = `Proyección para hoy — ${hoy}`;
+  document.getElementById("proy-fecha-sub").textContent   = `Proyección para hoy — ${hoy}`;
   document.getElementById("proy-admin-fecha").textContent = `Proyecciones del día — ${hoy}`;
 
   try {
-    const res  = await fetch(`${URL_GOOGLE_SCRIPT}?action=getProyeccion&fecha=${encodeURIComponent(hoy)}`);
-    const data = await res.json();
+    // Siempre traer proyecciones del día
+    const resProy = await fetch(`${URL_GOOGLE_SCRIPT}?action=getProyeccion&fecha=${encodeURIComponent(hoy)}`);
+    const data    = await resProy.json();
 
     document.getElementById("proy-loading").style.display = "none";
 
     if (esAdmin) {
-      // Vista administrador
+      // Admin también necesita la lista completa de asesores
+      let todosUsuarios = [];
+      try {
+        const resU = await fetch(`${URL_GOOGLE_SCRIPT}?action=getUsers`);
+        todosUsuarios = await resU.json();
+      } catch {}
       document.getElementById("proy-admin-view").style.display = "block";
-      proy_renderAdmin(data);
+      proy_renderAdmin(data, todosUsuarios);
     } else {
-      // Vista asesor — filtrar solo las del usuario activo
-      const usuario = leerSesion()?.usuario || "";
-      const misFilas = data.filter(f =>
-        (f.usuario || "").toLowerCase() === usuario.toLowerCase()
-      );
+      const usuario  = leerSesion()?.usuario || "";
+      const misFilas = data.filter(f => (f.usuario||"").toLowerCase() === usuario.toLowerCase());
+
+      if (misFilas.length > 0) {
+        // Ya tiene proyección → mostrar vista previa
+        document.getElementById("proy-preview-view").style.display = "block";
+        proy_renderPreview(misFilas);
+        // Precargar el editor también (oculto) para cuando edite
+        proy_filasCount = 0;
+        document.getElementById("proy-filas-wrap").innerHTML = "";
+        misFilas.forEach(f => proy_agregarFila({ ...f }));
+      } else {
+        // Sin proyección → mostrar editor vacío
+        document.getElementById("proy-asesor-view").style.display = "block";
+        proy_filasCount = 0;
+        document.getElementById("proy-filas-wrap").innerHTML = "";
+        proy_agregarFila();
+      }
+    }
+  } catch {
+    document.getElementById("proy-loading").style.display = "none";
+    if (!esAdmin) {
       document.getElementById("proy-asesor-view").style.display = "block";
       proy_filasCount = 0;
       document.getElementById("proy-filas-wrap").innerHTML = "";
-      if (misFilas.length > 0) {
-        misFilas.forEach(f => proy_agregarFila({
-          nombre: f.nombre, densidad: f.densidad,
-          producto: f.producto, estado: f.estado, hora: f.horaDisplay || "",
-        }));
-      } else {
-        proy_agregarFila(); // fila vacía inicial
-      }
+      proy_agregarFila();
     }
-  } catch (err) {
-    document.getElementById("proy-loading").style.display = "none";
-    document.getElementById("proy-asesor-view").style.display = "block";
-    proy_filasCount = 0;
-    document.getElementById("proy-filas-wrap").innerHTML = "";
-    proy_agregarFila();
   }
 }
 
-function proy_renderAdmin(data) {
+// Mostrar vista previa de la proyección ya enviada
+function proy_renderPreview(filas) {
+  const total = filas.reduce((s, f) => s + (parseInt(f.densidad)||0), 0);
+  let html = `
+    <div class="proy-preview-kpi">
+      <div class="proy-preview-kpi-num">${total}</div>
+      <div class="proy-preview-kpi-label">unidad${total!==1?"es":""} proyectada${total!==1?"s":""} hoy</div>
+    </div>
+    <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead><tr><th>Nombre</th><th>Densidad</th><th>Producto</th><th>Estado</th><th>Hora</th></tr></thead>
+      <tbody>
+        ${filas.map(f => `<tr>
+          <td style="font-weight:600">${f.nombre||"—"}</td>
+          <td style="text-align:center">${f.densidad||"—"}</td>
+          <td><span class="badge-product ${getBadgeClass(f.producto)}">${f.producto||"—"}</span></td>
+          <td>${proy_estadoBadge(f.estado)}</td>
+          <td style="color:var(--slate-500);font-size:0.82rem">${f.horaDisplay||"—"}</td>
+        </tr>`).join("")}
+      </tbody>
+    </table>
+    </div>`;
+  document.getElementById("proy-preview-tabla").innerHTML = html;
+}
+
+// Pasar de vista previa al editor
+function proy_mostrarEditor() {
+  document.getElementById("proy-preview-view").style.display = "none";
+  document.getElementById("proy-asesor-view").style.display  = "block";
+}
+
+function proy_renderAdmin(data, todosUsuarios = []) {
   const wrap = document.getElementById("proy-admin-tabla");
   const totalUnidades = data.reduce((sum, f) => sum + (parseInt(f.densidad) || 0), 0);
   document.getElementById("proy-total-unidades").textContent = totalUnidades;
 
-  if (data.length === 0) {
-    wrap.innerHTML = `<div class="empty-state" style="padding:3rem">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <p>No hay proyecciones registradas para hoy.</p></div>`;
-    return;
-  }
-
-  // Agrupar por asesor
+  // Agrupar proyecciones por agente
   const porAsesor = {};
   data.forEach(f => {
     const key = f.agente || f.usuario || "—";
@@ -2489,33 +2567,72 @@ function proy_renderAdmin(data) {
     porAsesor[key].push(f);
   });
 
+  // Obtener lista de asesores del libro Usuarios (excluir admins)
+  const asesoresRegistrados = todosUsuarios
+    .filter(u => (u.rol||"").toLowerCase() !== "administrador")
+    .map(u => u.agente || u.usuario || "—");
+
+  // Unir: asesores que enviaron + asesores que no enviaron
+  const todosAsesores = [...new Set([
+    ...Object.keys(porAsesor),
+    ...asesoresRegistrados
+  ])];
+
   let html = "";
-  Object.entries(porAsesor).forEach(([asesor, filas]) => {
+
+  // Primero los que SÍ enviaron
+  const enviaron    = todosAsesores.filter(a => porAsesor[a]);
+  const noEnviaron  = todosAsesores.filter(a => !porAsesor[a]);
+
+  if (enviaron.length === 0 && noEnviaron.length === 0) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:3rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <p>No hay proyecciones registradas para hoy.</p></div>`;
+    return;
+  }
+
+  // Sección de asesores que enviaron
+  enviaron.forEach(asesor => {
+    const filas = porAsesor[asesor];
     const totalAsesor = filas.reduce((s, f) => s + (parseInt(f.densidad)||0), 0);
     html += `<div class="proy-admin-asesor">
       <div class="proy-admin-asesor-header">
         <div class="proy-admin-avatar">${asesor.charAt(0).toUpperCase()}</div>
         <span class="proy-admin-nombre">${asesor}</span>
-        <span class="proy-admin-badge">${totalAsesor} unidad${totalAsesor!==1?"es":""}</span>
+        <span class="proy-admin-badge enviado">✓ Enviado · ${totalAsesor} unidad${totalAsesor!==1?"es":""}</span>
       </div>
       <div style="overflow-x:auto">
       <table class="data-table">
-        <thead><tr>
-          <th>Nombre</th><th>Densidad</th><th>Producto</th><th>Estado</th><th>Hora</th>
-        </tr></thead>
+        <thead><tr><th>Nombre</th><th>Densidad</th><th>Producto</th><th>Estado</th><th>Hora</th></tr></thead>
         <tbody>
           ${filas.map(f => `<tr>
             <td style="font-weight:600">${f.nombre||"—"}</td>
             <td style="text-align:center">${f.densidad||"—"}</td>
             <td><span class="badge-product ${getBadgeClass(f.producto)}">${f.producto||"—"}</span></td>
             <td>${proy_estadoBadge(f.estado)}</td>
-            <td style="white-space:nowrap;color:var(--slate-500);font-size:0.82rem">${f.horaDisplay||f.hora||"—"}</td>
+            <td style="white-space:nowrap;color:var(--slate-500);font-size:0.82rem">${f.horaDisplay||"—"}</td>
           </tr>`).join("")}
         </tbody>
       </table>
       </div>
     </div>`;
   });
+
+  // Sección de asesores que NO enviaron
+  if (noEnviaron.length > 0) {
+    html += `<div class="proy-pendientes-wrap">
+      <p class="proy-pendientes-title">⏳ Sin proyección hoy</p>
+      <div class="proy-pendientes-list">
+        ${noEnviaron.map(a => `
+        <div class="proy-pendiente-item">
+          <div class="proy-admin-avatar" style="background:var(--slate-200);color:var(--slate-500)">${a.charAt(0).toUpperCase()}</div>
+          <span class="proy-admin-nombre" style="color:var(--slate-500)">${a}</span>
+          <span class="proy-admin-badge pendiente">Sin enviar</span>
+        </div>`).join("")}
+      </div>
+    </div>`;
+  }
+
   wrap.innerHTML = html;
 }
 

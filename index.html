@@ -131,6 +131,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
             Cotizador
           </button>
+          <button class="tab" id="tab-proyeccion" onclick="switchTab('proyeccion')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Proyección
+          </button>
         </div>
 
         <!-- ── Tab: Formulario ── -->
@@ -596,6 +600,69 @@
 
           </div><!-- /cot-grid -->
         </div><!-- /panel-cotizador -->
+
+        <!-- ── Tab: Proyección ── -->
+        <div id="panel-proyeccion" class="tab-panel">
+          <div class="proy-card">
+
+            <!-- Header asesor -->
+            <div class="proy-header" id="proy-header-asesor">
+              <div class="proy-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div>
+                <h2 class="proy-title">Proyección del Día</h2>
+                <p class="proy-sub" id="proy-fecha-sub">Cargando...</p>
+              </div>
+            </div>
+
+            <!-- Header admin -->
+            <div class="proy-header proy-header-admin" id="proy-header-admin" style="display:none">
+              <div class="proy-header-icon" style="background:rgba(255,255,255,0.18)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              </div>
+              <div style="flex:1">
+                <h2 class="proy-title">Proyecciones del Día — Todos los Asesores</h2>
+                <p class="proy-sub" id="proy-admin-fecha">Hoy</p>
+              </div>
+              <div class="proy-kpi-total">
+                <div class="proy-kpi-num" id="proy-total-unidades">0</div>
+                <div class="proy-kpi-label">unidades proyectadas</div>
+              </div>
+            </div>
+
+            <!-- Loading -->
+            <div id="proy-loading" class="proy-loading-state">
+              <div class="loading-dots"><span></span><span></span><span></span></div>
+              <p>Cargando proyección...</p>
+            </div>
+
+            <!-- VISTA ASESOR: formulario editable -->
+            <div id="proy-asesor-view" style="display:none">
+              <div id="proy-filas-wrap"></div>
+              <div class="proy-add-row">
+                <button class="proy-btn-add" onclick="proy_agregarFila()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Agregar otro prospecto
+                </button>
+              </div>
+              <div class="proy-save-bar">
+                <button class="btn-primary proy-btn-save" id="proy-btn-save" onclick="proy_guardar()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  <span class="btn-text">Guardar Proyección</span>
+                  <span class="btn-loader" style="display:none"><span class="spinner"></span> Guardando...</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- VISTA ADMIN: tabla resumen -->
+            <div id="proy-admin-view" style="display:none">
+              <div id="proy-admin-tabla"></div>
+            </div>
+
+          </div>
+        </div><!-- /panel-proyeccion -->
+
     </main>
   </section>
 

@@ -3573,3 +3573,158 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   .proy-fila-grid { grid-template-columns: 1fr; }
   .proy-header { flex-direction: column; align-items: flex-start; }
 }
+
+/* ══════════════════════════════════════════════
+   MOBILE NAV (hamburger dropdown)
+══════════════════════════════════════════════ */
+.mobile-nav { display: none; position: relative; margin-bottom: 1.25rem; }
+
+.mobile-nav-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  transition: border-color var(--transition);
+}
+.mobile-nav-trigger:hover { border-color: var(--blue-400); }
+
+.mobile-nav-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-nav-active-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mobile-nav-active-icon svg { width: 16px; height: 16px; color: white; }
+
+.mobile-nav-active-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--slate-800);
+}
+
+.mobile-nav-chevron {
+  width: 18px; height: 18px;
+  color: var(--slate-400);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.mobile-nav-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0; right: 0;
+  background: white;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.mobile-nav-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--slate-100);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  transition: background var(--transition);
+  margin: 0; box-shadow: none;
+}
+.mobile-nav-item:last-child { border-bottom: none; }
+.mobile-nav-item:hover { background: var(--blue-50); }
+.mobile-nav-item.active { background: #f0f5ff; }
+
+.mobile-nav-item-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  background: var(--slate-100);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+.mobile-nav-item-icon svg { width: 17px; height: 17px; color: var(--slate-500); }
+.mobile-nav-item.active .mobile-nav-item-icon { background: var(--blue-600); }
+.mobile-nav-item.active .mobile-nav-item-icon svg { color: white; }
+
+.mobile-nav-item-text { display: flex; flex-direction: column; gap: 1px; }
+.mobile-nav-item-label {
+  font-size: 0.9rem; font-weight: 700;
+  color: var(--slate-800);
+}
+.mobile-nav-item.active .mobile-nav-item-label { color: var(--blue-800); }
+.mobile-nav-item-sub { font-size: 0.73rem; color: var(--slate-400); }
+
+/* Show mobile nav only on small screens */
+@media (max-width: 680px) {
+  .tab-bar { display: none !important; }
+  .mobile-nav { display: block; }
+}
+
+/* ── Proyección preview ── */
+.proy-preview-kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 1.25rem 1.5rem 0.5rem;
+}
+.proy-preview-kpi-num {
+  font-size: 2.2rem; font-weight: 800;
+  color: var(--blue-700); line-height: 1;
+}
+.proy-preview-kpi-label { font-size: 0.85rem; color: var(--slate-500); font-weight: 600; }
+
+.proy-preview-actions {
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid var(--slate-100);
+}
+
+/* ── Admin pendientes section ── */
+.proy-pendientes-wrap {
+  padding: 1.25rem 1.5rem;
+  background: var(--slate-50);
+  border-top: 1px solid var(--slate-100);
+}
+.proy-pendientes-title {
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--slate-500);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+}
+.proy-pendientes-list { display: flex; flex-direction: column; gap: 8px; }
+.proy-pendiente-item {
+  display: flex; align-items: center; gap: 10px;
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+
+/* Badge variants */
+.proy-admin-badge.enviado {
+  background: #dcfce7; color: #166534;
+}
+.proy-admin-badge.pendiente {
+  background: var(--slate-100); color: var(--slate-500);
+}

@@ -222,6 +222,7 @@ function logout() {
   cot_modoPanel      = "asesor";
   cot_currentInt     = 1;
   cot_modoActuarial  = false;
+  proy_filasCount    = 0;
 
   // ── Resetear UI de registros al estado inicial ──
   const tablaEl = document.getElementById("tabla-registros");
@@ -285,9 +286,10 @@ function switchTab(tab) {
   document.getElementById(`tab-${tab}`).classList.add("active");
   document.getElementById(`panel-${tab}`).classList.add("active");
 
-  if (tab === "records")  verRegistros();
-  if (tab === "encuesta") iniciarEncuesta();
-  if (tab === "cotizador") cot_init();
+  if (tab === "records")    verRegistros();
+  if (tab === "encuesta")   iniciarEncuesta();
+  if (tab === "cotizador")  cot_init();
+  if (tab === "proyeccion") proy_init();
 }
 
 /* ══════════════════════════════════════════════
@@ -2311,4 +2313,261 @@ function closeWaModal(event) {
     overlay.style.display = "none";
     document.body.style.overflow = "";
   }, 250);
+}
+
+
+/* ══════════════════════════════════════════════
+   PROYECCIÓN
+══════════════════════════════════════════════ */
+let proy_filasCount = 0;
+
+// Fecha de hoy en Lima, solo fecha dd/mm/yyyy
+function proy_fechaHoyLima() {
+  const now   = new Date();
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Lima",
+    day: "2-digit", month: "2-digit", year: "numeric",
+  }).formatToParts(now);
+  const get = t => parts.find(p => p.type === t)?.value ?? "";
+  return `${get("day")}/${get("month")}/${get("year")}`;
+}
+
+// Hora en formato "h am/pm" compatible con Sheets
+function proy_parsearHora(str) {
+  if (!str) return "";
+  const m = str.trim().match(/^(\d{1,2})\s*(am|pm)$/i);
+  if (!m) return str;
+  let h = parseInt(m[1], 10);
+  const ap = m[2].toLowerCase();
+  if (ap === "pm" && h !== 12) h += 12;
+  if (ap === "am" && h === 12) h = 0;
+  // Devolver como string "HH:00" para que Sheets lo reconozca como hora
+  return `${String(h).padStart(2,"0")}:00`;
+}
+
+// Renderizar una fila de prospecto
+function proy_renderFila(idx, data = {}) {
+  const productos = ["Auna Classic","Auna Premium","Auna Senior","Onco Pro","Onco Plus"];
+  const estados   = ["Generado","Por Vencer","Pagado","Pendiente"];
+  const prodOpts  = productos.map(p => `<option value="${p}" ${data.producto===p?"selected":""}>${p}</option>`).join("");
+  const estadOpts = estados.map(s => `<option value="${s}" ${data.estado===s?"selected":""}>${s}</option>`).join("");
+  const densOpts  = [1,2,3,4].map(n => `<option value="${n}" ${data.densidad==n?"selected":""}>${n}</option>`).join("");
+
+  return `
+  <div class="proy-fila" id="proy-fila-${idx}">
+    <div class="proy-fila-header">
+      <span class="proy-fila-num">Prospecto ${idx}</span>
+      ${idx > 1 ? `<button type="button" class="proy-btn-remove" onclick="proy_eliminarFila(${idx})" title="Eliminar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>` : ""}
+    </div>
+    <div class="proy-fila-grid">
+      <div class="field-group">
+        <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Nombre</label>
+        <input type="text" id="proy-nombre-${idx}" value="${data.nombre||""}" placeholder="Nombre del prospecto" class="proy-input">
+      </div>
+      <div class="field-group">
+        <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Densidad</label>
+        <div class="select-wrap"><select id="proy-densidad-${idx}" class="proy-select">${densOpts}</select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Producto</label>
+        <div class="select-wrap"><select id="proy-producto-${idx}" class="proy-select">${prodOpts}</select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Estado</label>
+        <div class="select-wrap"><select id="proy-estado-${idx}" class="proy-select">${estadOpts}</select>
+        <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </div>
+      <div class="field-group">
+        <label class="field-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12"/></svg> Hora</label>
+        <input type="text" id="proy-hora-${idx}" value="${data.hora||""}" placeholder="Ej: 4 pm, 10 am" class="proy-input" maxlength="8">
+      </div>
+    </div>
+  </div>`;
+}
+
+function proy_agregarFila(data = {}) {
+  proy_filasCount++;
+  const wrap = document.getElementById("proy-filas-wrap");
+  const div  = document.createElement("div");
+  div.innerHTML = proy_renderFila(proy_filasCount, data);
+  wrap.appendChild(div.firstElementChild);
+}
+
+function proy_eliminarFila(idx) {
+  const el = document.getElementById("proy-fila-" + idx);
+  if (el) el.remove();
+}
+
+function proy_leerFilas() {
+  const filas = [];
+  document.querySelectorAll(".proy-fila").forEach(fila => {
+    const id = fila.id.replace("proy-fila-","");
+    filas.push({
+      nombre:   document.getElementById("proy-nombre-"   + id)?.value.trim() || "",
+      densidad: document.getElementById("proy-densidad-" + id)?.value || "1",
+      producto: document.getElementById("proy-producto-" + id)?.value || "",
+      estado:   document.getElementById("proy-estado-"   + id)?.value || "",
+      hora:     proy_parsearHora(document.getElementById("proy-hora-" + id)?.value || ""),
+    });
+  });
+  return filas.filter(f => f.nombre); // ignorar filas sin nombre
+}
+
+async function proy_init() {
+  const rol    = leerSesion()?.rol;
+  const esAdmin = rol === "Administrador";
+
+  // Mostrar loading
+  document.getElementById("proy-loading").style.display       = "block";
+  document.getElementById("proy-asesor-view").style.display   = "none";
+  document.getElementById("proy-admin-view").style.display    = "none";
+  document.getElementById("proy-header-asesor").style.display = esAdmin ? "none" : "flex";
+  document.getElementById("proy-header-admin").style.display  = esAdmin ? "flex" : "none";
+
+  const hoy = proy_fechaHoyLima();
+  document.getElementById("proy-fecha-sub").textContent  = `Proyección para hoy — ${hoy}`;
+  document.getElementById("proy-admin-fecha").textContent = `Proyecciones del día — ${hoy}`;
+
+  try {
+    const res  = await fetch(`${URL_GOOGLE_SCRIPT}?action=getProyeccion&fecha=${encodeURIComponent(hoy)}`);
+    const data = await res.json();
+
+    document.getElementById("proy-loading").style.display = "none";
+
+    if (esAdmin) {
+      // Vista administrador
+      document.getElementById("proy-admin-view").style.display = "block";
+      proy_renderAdmin(data);
+    } else {
+      // Vista asesor — filtrar solo las del usuario activo
+      const usuario = leerSesion()?.usuario || "";
+      const misFilas = data.filter(f =>
+        (f.usuario || "").toLowerCase() === usuario.toLowerCase()
+      );
+      document.getElementById("proy-asesor-view").style.display = "block";
+      proy_filasCount = 0;
+      document.getElementById("proy-filas-wrap").innerHTML = "";
+      if (misFilas.length > 0) {
+        misFilas.forEach(f => proy_agregarFila({
+          nombre: f.nombre, densidad: f.densidad,
+          producto: f.producto, estado: f.estado, hora: f.horaDisplay || "",
+        }));
+      } else {
+        proy_agregarFila(); // fila vacía inicial
+      }
+    }
+  } catch (err) {
+    document.getElementById("proy-loading").style.display = "none";
+    document.getElementById("proy-asesor-view").style.display = "block";
+    proy_filasCount = 0;
+    document.getElementById("proy-filas-wrap").innerHTML = "";
+    proy_agregarFila();
+  }
+}
+
+function proy_renderAdmin(data) {
+  const wrap = document.getElementById("proy-admin-tabla");
+  const totalUnidades = data.reduce((sum, f) => sum + (parseInt(f.densidad) || 0), 0);
+  document.getElementById("proy-total-unidades").textContent = totalUnidades;
+
+  if (data.length === 0) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:3rem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <p>No hay proyecciones registradas para hoy.</p></div>`;
+    return;
+  }
+
+  // Agrupar por asesor
+  const porAsesor = {};
+  data.forEach(f => {
+    const key = f.agente || f.usuario || "—";
+    if (!porAsesor[key]) porAsesor[key] = [];
+    porAsesor[key].push(f);
+  });
+
+  let html = "";
+  Object.entries(porAsesor).forEach(([asesor, filas]) => {
+    const totalAsesor = filas.reduce((s, f) => s + (parseInt(f.densidad)||0), 0);
+    html += `<div class="proy-admin-asesor">
+      <div class="proy-admin-asesor-header">
+        <div class="proy-admin-avatar">${asesor.charAt(0).toUpperCase()}</div>
+        <span class="proy-admin-nombre">${asesor}</span>
+        <span class="proy-admin-badge">${totalAsesor} unidad${totalAsesor!==1?"es":""}</span>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="data-table">
+        <thead><tr>
+          <th>Nombre</th><th>Densidad</th><th>Producto</th><th>Estado</th><th>Hora</th>
+        </tr></thead>
+        <tbody>
+          ${filas.map(f => `<tr>
+            <td style="font-weight:600">${f.nombre||"—"}</td>
+            <td style="text-align:center">${f.densidad||"—"}</td>
+            <td><span class="badge-product ${getBadgeClass(f.producto)}">${f.producto||"—"}</span></td>
+            <td>${proy_estadoBadge(f.estado)}</td>
+            <td style="white-space:nowrap;color:var(--slate-500);font-size:0.82rem">${f.horaDisplay||f.hora||"—"}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+function proy_estadoBadge(estado) {
+  const cfg = {
+    "Generado":   { bg:"#dbeafe", color:"#1d4ed8" },
+    "Por Vencer": { bg:"#fef9c3", color:"#92400e" },
+    "Pagado":     { bg:"#dcfce7", color:"#166534" },
+    "Pendiente":  { bg:"#fee2e2", color:"#b91c1c" },
+  };
+  const c = cfg[estado];
+  if (!c) return estado || "—";
+  return `<span style="display:inline-block;padding:3px 10px;border-radius:100px;font-size:0.75rem;font-weight:700;background:${c.bg};color:${c.color}">${estado}</span>`;
+}
+
+async function proy_guardar() {
+  const btn    = document.getElementById("proy-btn-save");
+  const text   = btn.querySelector(".btn-text");
+  const loader = btn.querySelector(".btn-loader");
+  btn.disabled = true; text.style.display="none"; loader.style.display="flex";
+
+  const filas = proy_leerFilas();
+  if (filas.length === 0) {
+    alert("Agrega al menos un prospecto con nombre antes de guardar.");
+    btn.disabled=false; text.style.display="inline"; loader.style.display="none";
+    return;
+  }
+
+  const sesion = leerSesion();
+  const payload = {
+    action:  "saveProyeccion",
+    agente:  sesion?.agente  || "",
+    usuario: sesion?.usuario || "",
+    fecha:   proy_fechaHoyLima(),
+    filas,
+  };
+
+  try {
+    await fetch(URL_GOOGLE_SCRIPT, {
+      method: "POST", mode: "no-cors",
+      body: JSON.stringify(payload),
+    });
+    // Toast reutilizado
+    const toast = document.getElementById("toast");
+    if (toast) {
+      toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ¡Proyección guardada!`;
+      toast.style.display = "flex";
+      setTimeout(() => { toast.style.display="none"; }, 3000);
+    }
+  } catch {
+    alert("Error al guardar la proyección. Intenta de nuevo.");
+  } finally {
+    btn.disabled=false; text.style.display="inline"; loader.style.display="none";
+  }
 }

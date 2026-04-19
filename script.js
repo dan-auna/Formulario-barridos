@@ -2450,12 +2450,12 @@ function proy_leerFilas() {
     const id = fila.id.replace("proy-fila-","");
     const horaDisplay = document.getElementById("proy-hora-" + id)?.value || "1 pm";
     filas.push({
-      nombre:       document.getElementById("proy-nombre-"   + id)?.value.trim() || "",
-      densidad:     document.getElementById("proy-densidad-" + id)?.value || "1",
-      producto:     document.getElementById("proy-producto-" + id)?.value || "",
-      estado:       document.getElementById("proy-estado-"   + id)?.value || "",
-      hora:         proy_parsearHora(horaDisplay), // "HH:00" para Sheets
-      horaDisplay:  horaDisplay,                   // "h pm" para legibilidad
+      nombre:      document.getElementById("proy-nombre-"   + id)?.value.trim() || "",
+      densidad:    document.getElementById("proy-densidad-" + id)?.value || "1",
+      producto:    document.getElementById("proy-producto-" + id)?.value || "",
+      estado:      document.getElementById("proy-estado-"   + id)?.value || "",
+      hora:        proy_parsearHora(horaDisplay),
+      horaDisplay: horaDisplay,
     });
   });
   return filas.filter(f => f.nombre);
@@ -2554,7 +2554,10 @@ function proy_mostrarEditor() {
   document.getElementById("proy-asesor-view").style.display  = "block";
 }
 
+let _proy_datosAdmin = []; // cache para descarga
+
 function proy_renderAdmin(data, todosUsuarios = []) {
+  _proy_datosAdmin = data; // guardar para descarga
   const wrap = document.getElementById("proy-admin-tabla");
   const totalUnidades = data.reduce((sum, f) => sum + (parseInt(f.densidad) || 0), 0);
   document.getElementById("proy-total-unidades").textContent = totalUnidades;
@@ -2675,16 +2678,58 @@ async function proy_guardar() {
       method: "POST", mode: "no-cors",
       body: JSON.stringify(payload),
     });
-    // Toast reutilizado
+
+    // Toast
     const toast = document.getElementById("toast");
     if (toast) {
       toast.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ¡Proyección guardada!`;
       toast.style.display = "flex";
       setTimeout(() => { toast.style.display="none"; }, 3000);
     }
+
+    // Pasar a vista previa con los datos recién guardados
+    document.getElementById("proy-asesor-view").style.display  = "none";
+    document.getElementById("proy-preview-view").style.display = "block";
+    proy_renderPreview(filas.map(f => ({ ...f, horaDisplay: f.horaDisplay || f.hora })));
+
   } catch {
     alert("Error al guardar la proyección. Intenta de nuevo.");
   } finally {
     btn.disabled=false; text.style.display="inline"; loader.style.display="none";
   }
+}
+
+function proy_descargarExcel() {
+  const data = _proy_datosAdmin;
+  if (!data || data.length === 0) {
+    alert("No hay proyecciones del día para descargar.");
+    return;
+  }
+
+  const hoy = proy_fechaHoyLima();
+
+  // Construir filas para el Excel
+  const filas = data.map(f => ({
+    "Asesor":    f.agente || f.usuario || "—",
+    "Nombre":    f.nombre    || "—",
+    "Densidad":  parseInt(f.densidad) || 0,
+    "Producto":  f.producto  || "—",
+    "Estado":    f.estado    || "—",
+    "Hora":      f.horaDisplay || "—",
+  }));
+
+  // Usar SheetJS (ya disponible en el portal desde CDN)
+  const ws = XLSX.utils.json_to_sheet(filas);
+  ws["!cols"] = [
+    { wch: 18 }, // Asesor
+    { wch: 22 }, // Nombre
+    { wch: 10 }, // Densidad
+    { wch: 18 }, // Producto
+    { wch: 14 }, // Estado
+    { wch: 10 }, // Hora
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `Proyeccion ${hoy}`.slice(0, 31));
+  XLSX.writeFile(wb, `Proyeccion_${hoy.replace(/\//g,"-")}.xlsx`);
 }

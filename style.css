@@ -3728,3 +3728,21 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 .proy-admin-badge.pendiente {
   background: var(--slate-100); color: var(--slate-500);
 }
+
+/* Proyección admin download bar */
+.proy-admin-download-bar {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--slate-100);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.proy-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  padding: 9px 16px;
+  margin: 0;
+  width: auto;
+}

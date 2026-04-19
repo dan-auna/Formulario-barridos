@@ -3372,7 +3372,7 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 .proy-header {
   background: linear-gradient(135deg, var(--blue-800), var(--blue-600));
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -3414,7 +3414,7 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 /* Filas de prospectos */
 .proy-fila {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid var(--slate-100);
 }
 
@@ -3487,7 +3487,7 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 /* Add row button */
 .proy-add-row {
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   border-bottom: 1px solid var(--slate-100);
 }
 
@@ -3499,20 +3499,20 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   border: 1.5px dashed var(--blue-300);
   color: var(--blue-700);
   border-radius: var(--radius-sm);
-  padding: 9px 16px;
+  padding: 8px 14px;
   font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition);
   margin: 0; width: auto; box-shadow: none;
 }
-.proy-btn-add svg { width: 15px; height: 15px; }
+.proy-btn-add svg { width: 14px; height: 14px; }
 .proy-btn-add:hover { background: var(--blue-100); border-color: var(--blue-500); }
 
 /* Save bar */
 .proy-save-bar {
-  padding: 1.25rem 1.5rem;
+  padding: 1rem 1.25rem;
   display: flex;
   justify-content: flex-end;
 }
@@ -3533,36 +3533,36 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1.5rem;
+  padding: 0.65rem 1.25rem;
   background: var(--slate-50);
   border-bottom: 1px solid var(--slate-100);
 }
 
 .proy-admin-avatar {
-  width: 30px; height: 30px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--blue-600), var(--blue-400));
   color: white;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 
 .proy-admin-nombre {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--blue-800);
   flex: 1;
 }
 
 .proy-admin-badge {
+  border-radius: 100px;
+  padding: 2px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
   background: var(--blue-100);
   color: var(--blue-700);
-  border-radius: 100px;
-  padding: 3px 12px;
-  font-size: 0.75rem;
-  font-weight: 700;
 }
 
 /* Responsive */
@@ -3702,47 +3702,44 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 /* ── Admin pendientes section ── */
 .proy-pendientes-wrap {
-  padding: 1.25rem 1.5rem;
+  padding: 0.875rem 1.25rem;
   background: var(--slate-50);
   border-top: 1px solid var(--slate-100);
 }
 .proy-pendientes-title {
-  font-size: 0.78rem; font-weight: 700;
-  color: var(--slate-500);
+  font-size: 0.72rem; font-weight: 700;
+  color: var(--slate-400);
   text-transform: uppercase; letter-spacing: 0.06em;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
-.proy-pendientes-list { display: flex; flex-direction: column; gap: 8px; }
+.proy-pendientes-list { display: flex; flex-direction: column; gap: 6px; }
 .proy-pendiente-item {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 8px;
   background: white;
   border: 1px solid var(--slate-200);
   border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  padding: 7px 12px;
 }
 
 /* Badge variants */
-.proy-admin-badge.enviado {
-  background: #dcfce7; color: #166534;
-}
-.proy-admin-badge.pendiente {
-  background: var(--slate-100); color: var(--slate-500);
-}
+.proy-admin-badge.enviado { background: #dcfce7; color: #166534; }
+.proy-admin-badge.pendiente { background: var(--slate-100); color: var(--slate-400); }
 
 /* Proyección admin download bar */
 .proy-admin-download-bar {
-  padding: 1rem 1.5rem;
+  padding: 0.65rem 1.25rem;
   border-bottom: 1px solid var(--slate-100);
   display: flex;
   justify-content: flex-end;
+  background: var(--white);
 }
 
 .proy-download-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  padding: 9px 16px;
+  font-size: 0.82rem;
+  padding: 7px 14px;
   margin: 0;
   width: auto;
 }

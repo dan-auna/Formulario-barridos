@@ -2708,28 +2708,38 @@ function proy_descargarExcel() {
 
   const hoy = proy_fechaHoyLima();
 
-  // Construir filas para el Excel
-  const filas = data.map(f => ({
-    "Asesor":    f.agente || f.usuario || "—",
-    "Nombre":    f.nombre    || "—",
-    "Densidad":  parseInt(f.densidad) || 0,
-    "Producto":  f.producto  || "—",
-    "Estado":    f.estado    || "—",
-    "Hora":      f.horaDisplay || "—",
-  }));
+  try {
+    // Construir filas limpias (sin caracteres especiales que puedan fallar en XLSX)
+    const filas = data.map(f => ({
+      "Asesor":   String(f.agente || f.usuario || ""),
+      "Nombre":   String(f.nombre   || ""),
+      "Densidad": parseInt(f.densidad) || 0,
+      "Producto": String(f.producto || ""),
+      "Estado":   String(f.estado   || ""),
+      "Hora":     String(f.horaDisplay || ""),
+    }));
 
-  // Usar SheetJS (ya disponible en el portal desde CDN)
-  const ws = XLSX.utils.json_to_sheet(filas);
-  ws["!cols"] = [
-    { wch: 18 }, // Asesor
-    { wch: 22 }, // Nombre
-    { wch: 10 }, // Densidad
-    { wch: 18 }, // Producto
-    { wch: 14 }, // Estado
-    { wch: 10 }, // Hora
-  ];
+    const ws = XLSX.utils.json_to_sheet(filas, {
+      header: ["Asesor","Nombre","Densidad","Producto","Estado","Hora"]
+    });
+    ws["!cols"] = [
+      { wch: 18 }, // Asesor
+      { wch: 22 }, // Nombre
+      { wch: 10 }, // Densidad
+      { wch: 20 }, // Producto
+      { wch: 14 }, // Estado
+      { wch: 10 }, // Hora
+    ];
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, `Proyeccion ${hoy}`.slice(0, 31));
-  XLSX.writeFile(wb, `Proyeccion_${hoy.replace(/\//g,"-")}.xlsx`);
+    const wb = XLSX.utils.book_new();
+    const sheetName = `Proyeccion ${hoy}`.replace(/\//g,"-").slice(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    // Forzar descarga con writeFile
+    XLSX.writeFile(wb, `Proyeccion_${hoy.replace(/\//g,"-")}.xlsx`);
+
+  } catch (err) {
+    console.error("Error al generar Excel:", err);
+    alert("Error al generar el archivo. Intenta de nuevo.");
+  }
 }

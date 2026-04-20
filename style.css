@@ -2826,6 +2826,7 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   justify-content: center;
   align-items: flex-start;
   width: 100%;
+  padding: 12px 0 20px;
   overflow: hidden;
 }
 
@@ -2836,87 +2837,107 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
   transform-origin: top center;
 }
 
-/* The actual quote card (fixed 450px for export) */
+/*
+  THE QUOTE CARD — 1080 × 1920 px (9:16, WhatsApp-ready)
+  Preview is CSS-scaled to fit available space.
+  Export captures at native 1080px width.
+*/
 .cot-card {
   background: #ffffff;
-  width: 450px;
-  min-width: 450px;
-  border-radius: 24px;
+  width: 1080px;
+  min-width: 1080px;
+  height: 1920px;
+  border-radius: 0px;
   overflow: hidden;
   box-shadow: 0 20px 50px rgba(0,172,193,0.15);
   border: 1px solid #f0f0f0;
   font-family: 'Outfit', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scale preview down so it fits the panel on every device.
+   The card is 1080px wide; we scale it to the available column width. */
+.cot-preview-scaler {
+  transform: scale(var(--cot-scale, 0.33));
+  transform-origin: top center;
+  /* Compensate the height so the container doesn't leave 1920px of blank space */
+  margin-bottom: calc((1920px * var(--cot-scale, 0.33)) - 1920px);
 }
 
 .cot-card-top {
-  padding: 24px 28px 12px;
+  padding: 56px 64px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
-.cot-logo { height: 36px; }
+.cot-logo { height: 80px; }
 
 .cot-badge-oficial {
   background: #ecfeff;
   color: #0e7490;
-  font-size: 9px;
+  font-size: 20px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 10px 24px;
   border-radius: 100px;
-  border: 1px solid #a5f3fc;
+  border: 2px solid #a5f3fc;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .cot-card-subtitle {
-  padding: 10px 28px 14px;
+  padding: 24px 64px 32px;
+  flex-shrink: 0;
 }
 
 .cot-card-subtitle h3 {
-  font-size: 1rem;
+  font-size: 2.4rem;
   font-weight: 700;
   color: #1e293b;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .cot-plan-banner {
-  margin: 0 28px 20px;
-  padding: 14px 18px;
+  margin: 0 64px 48px;
+  padding: 34px 42px;
   background: #00acc1;
-  border-radius: 16px;
+  border-radius: 36px;
   color: white;
+  flex-shrink: 0;
 }
 
 .cot-plan-label {
-  font-size: 9px;
+  font-size: 20px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.8;
-  margin-bottom: 3px;
+  margin-bottom: 8px;
 }
 
 .cot-plan-banner h4 {
-  font-size: 1rem;
+  font-size: 2.2rem;
   font-weight: 700;
 }
 
 /* Lista integrantes en la tarjeta */
 .cot-lista {
-  padding: 0 28px;
+  padding: 0 64px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 24px;
+  flex-shrink: 0;
 }
 
 .cot-lista-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.82rem;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 8px;
+  font-size: 1.9rem;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 20px;
 }
 
 .cot-lista-item:last-child { border-bottom: none; }
@@ -2924,7 +2945,7 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 .cot-lista-name { color: #475569; font-weight: 500; }
 
 .cot-lista-reg-through {
-  font-size: 0.7rem;
+  font-size: 1.4rem;
   text-decoration: line-through;
   color: #cbd5e1;
   display: block;
@@ -2933,12 +2954,14 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 }
 
 .cot-lista-promo {
+  font-size: 1.9rem;
   font-weight: 700;
   color: #00acc1;
   white-space: nowrap;
 }
 
 .cot-lista-reg-only {
+  font-size: 1.9rem;
   font-weight: 700;
   color: #1e293b;
   white-space: nowrap;
@@ -2946,36 +2969,37 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 /* Total con descuento */
 .cot-total-box {
-  margin: 24px 28px 0;
-  padding: 20px 22px;
+  margin: 56px 64px 0;
+  padding: 48px 52px;
   background: #0f172a;
-  border-radius: 20px;
+  border-radius: 48px;
   color: white;
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  flex-shrink: 0;
 }
 
 .cot-total-label {
-  font-size: 0.72rem;
+  font-size: 1.6rem;
   opacity: 0.65;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .cot-total-amounts {
   display: flex;
   align-items: baseline;
-  gap: 20px;
+  gap: 40px;
   white-space: nowrap;
 }
 
 .cot-amount-promo {
-  font-size: 1.7rem;
+  font-size: 4rem;
   font-weight: 800;
   color: #00acc1;
   white-space: nowrap;
 }
 
 .cot-amount-reg {
-  font-size: 0.82rem;
+  font-size: 2rem;
   text-decoration: line-through;
   opacity: 0.35;
   white-space: nowrap;
@@ -2983,13 +3007,13 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 .cot-oferta-tag {
   display: inline-block;
-  margin-top: 10px;
+  margin-top: 24px;
   background: #b0d235;
   color: #000;
-  font-size: 0.68rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 4px;
+  padding: 8px 24px;
+  border-radius: 8px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2997,77 +3021,83 @@ textarea::placeholder { color: var(--slate-300) !important; opacity: 1; }
 
 .cot-vence {
   text-align: center;
-  font-size: 0.72rem;
+  font-size: 1.65rem;
   font-weight: 700;
   color: #ef4444;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  padding: 10px 0 4px;
+  padding: 24px 0 10px;
+  flex-shrink: 0;
 }
 
 .cot-beneficio {
-  margin: 0 28px 20px;
-  padding: 10px 14px;
+  margin: 0 64px 36px;
+  padding: 24px 32px;
   background: #fffbeb;
-  border: 1px dashed #fcd34d;
-  border-radius: 12px;
+  border: 2px dashed #fcd34d;
+  border-radius: 28px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 24px;
+  flex-shrink: 0;
 }
 
-.cot-beneficio-icon { font-size: 1.4rem; line-height: 1; }
-.cot-beneficio-title { font-size: 0.65rem; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: 0.05em; }
-.cot-beneficio-val   { font-size: 0.75rem; color: #451a03; font-weight: 500; margin-top: 2px; }
+.cot-beneficio-icon { font-size: 3rem; line-height: 1; }
+.cot-beneficio-title { font-size: 1.4rem; font-weight: 700; color: #78350f; text-transform: uppercase; letter-spacing: 0.05em; }
+.cot-beneficio-val   { font-size: 1.75rem; color: #451a03; font-weight: 500; margin-top: 6px; }
 
 /* Total sin descuento */
 .cot-total-regular {
-  margin: 24px 28px 0;
-  padding: 20px 22px;
+  margin: 56px 64px 0;
+  padding: 48px 52px;
   background: #f1f5f9;
-  border-radius: 20px;
-  border: 1.5px solid #e2e8f0;
+  border-radius: 48px;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .cot-total-label-reg {
-  font-size: 0.72rem;
+  font-size: 1.6rem;
   color: #94a3b8;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
 }
 
 .cot-amount-solo-reg {
-  font-size: 1.7rem;
+  font-size: 4rem;
   font-weight: 800;
   color: #1e293b;
   white-space: nowrap;
 }
 
+/* Spacer to push footer down */
+.cot-card > div:not(.cot-footer) { flex-shrink: 0; }
+
 /* Footer de la tarjeta */
 .cot-footer {
   background: #00acc1;
-  padding: 14px;
+  padding: 40px;
   text-align: center;
-  margin-top: 20px;
+  margin-top: auto;
 }
 
 .cot-footer p {
-  font-size: 0.82rem;
+  font-size: 1.9rem;
   color: white;
   font-weight: 700;
 }
 
-/* Responsive cotizador */
-@media (max-width: 900px) {
+/* Responsive cotizador — recalculate scale */
+.cot-preview-wrap { --cot-scale: 0.38; }
+
+@media (max-width: 1200px) { .cot-preview-wrap { --cot-scale: 0.32; } }
+@media (max-width: 900px)  {
   .cot-grid { grid-template-columns: 1fr; }
-  .cot-preview-scaler { transform: scale(0.88); margin-bottom: -40px; }
+  .cot-preview-wrap { --cot-scale: 0.55; }
 }
-
-@media (max-width: 520px) {
-  .cot-preview-scaler { transform: scale(0.72); margin-bottom: -100px; }
-  .cot-extras-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 400px) {
+@media (max-width: 680px)  { .cot-preview-wrap { --cot-scale: 0.46; } }
+@media (max-width: 520px)  { .cot-preview-wrap { --cot-scale: 0.34; } }
+@media (max-width: 420px)  { .cot-preview-wrap { --cot-scale: 0.28; } }
+@media (max-width: 380px)  { .cot-preview-wrap { --cot-scale: 0.25; } }
   .cot-preview-scaler { transform: scale(0.60); margin-bottom: -155px; }
 }
 

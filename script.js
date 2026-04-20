@@ -288,7 +288,7 @@ function switchTab(tab) {
 
   if (tab === "records")    verRegistros();
   if (tab === "encuesta")   iniciarEncuesta();
-  if (tab === "cotizador")  cot_init();
+  if (tab === "cotizador")  { cot_init(); setTimeout(cot_ajustarEscala, 50); }
   if (tab === "proyeccion") proy_init();
 
   // Sync mobile nav
@@ -1909,6 +1909,23 @@ function cot_init() {
   const hoy = new Date().toISOString().split("T")[0];
   document.getElementById("cot_fechaLimite").value = hoy;
   cot_renderizarCampos();
+  cot_ajustarEscala();
+  window.addEventListener("resize", cot_ajustarEscala);
+}
+
+// Calcula la escala para que la tarjeta 1080px quepa en el panel disponible
+function cot_ajustarEscala() {
+  const wrap = document.querySelector(".cot-preview-wrap");
+  if (!wrap) return;
+  const disponible = wrap.clientWidth || 400;
+  const escala = Math.min(disponible / 1080, 1);
+  const scaler = document.querySelector(".cot-preview-scaler");
+  if (!scaler) return;
+  scaler.style.transform       = `scale(${escala})`;
+  scaler.style.transformOrigin = "top center";
+  // Colapsar el espacio vacío que deja la tarjeta escalada
+  const alturaReal = 1920 * escala;
+  scaler.style.marginBottom = `${alturaReal - 1920}px`;
 }
 
 function cot_calcularEdadActuarial(fechaNac) {
@@ -2180,7 +2197,11 @@ async function cot_exportarCotizacion(conDescuento) {
       return;
     }
     const dataUrl = await htmlToImage.toJpeg(card, {
-      quality: 0.95, pixelRatio: 2, width: 450, backgroundColor: "#ffffff",
+      quality: 0.95,
+      pixelRatio: 1,        // 1:1 — card is already 1080px wide
+      width:  1080,
+      height: 1920,
+      backgroundColor: "#ffffff",
     });
     const link = document.createElement("a");
     link.download = conDescuento ? "Cotizacion_Promo.jpg" : "Cotizacion_Regular.jpg";

@@ -2002,19 +2002,17 @@ function cot_init() {
   window.addEventListener("resize", cot_ajustarEscala);
 }
 
-// Calcula la escala para que la tarjeta quepa completa en pantalla sin scroll
+// Calcula la escala para que la tarjeta 450px quepa completa en el panel sin scroll
 function cot_ajustarEscala() {
   const wrap   = document.querySelector(".cot-preview-wrap");
   const scaler = document.querySelector(".cot-preview-scaler");
   const card   = document.getElementById("cot_cotizacion-final");
   if (!wrap || !scaler || !card) return;
 
-  // Medir el tamaño real de la tarjeta (1080px ancho, alto variable según contenido)
-  const cardH = card.scrollHeight || 1400;
-  const cardW = 1080;
+  const cardW = 450;
+  const cardH = card.scrollHeight || 700;
 
   const anchoDisponible  = wrap.clientWidth  || 400;
-  // Altura disponible: viewport menos navbar (~64px) y padding (~32px)
   const alturaDisponible = (window.innerHeight - 64 - 32) || 500;
 
   const escalaPorAncho  = anchoDisponible  / cardW;
@@ -2024,7 +2022,6 @@ function cot_ajustarEscala() {
   scaler.style.transform       = `scale(${escala})`;
   scaler.style.transformOrigin = "top center";
 
-  // Fijar la altura del wrapper al espacio visual real que ocupa la tarjeta escalada
   const alturaReal = Math.round(cardH * escala);
   wrap.style.height   = alturaReal + "px";
   wrap.style.overflow = "hidden";
@@ -2309,8 +2306,8 @@ async function cot_exportarCotizacion(conDescuento) {
     }
     const dataUrl = await htmlToImage.toJpeg(card, {
       quality: 0.95,
-      pixelRatio: 2,        // 2x para alta resolución (1080×auto → 2160×auto)
-      width:  1080,
+      pixelRatio: 2,
+      width:  450,
       backgroundColor: "#ffffff",
     });
     const link = document.createElement("a");
